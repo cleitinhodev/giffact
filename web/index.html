@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+<link rel="icon" href="favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" href="favicon.png" />
+<title>Giffact</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <header id="topbar" class="neon-h">
+    <div class="brand"><img class="logo" src="favicon.png" alt="" draggable="false" /><span class="brand-name">Giffact</span></div>
+    <div class="group">
+      <button id="btnOpen" data-i18n-title="top.open.title"><span class="ic">📂</span><span class="lbl" data-i18n="top.open"></span></button>
+      <button id="btnProject" class="has-menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menuProject" data-i18n-title="top.project.title"><span class="ic">💾</span><span class="lbl" data-i18n="top.project"></span><span class="caret">▾</span></button>
+      <button id="btnExport" data-i18n-title="top.export.title"><span class="ic">🖼</span><span class="lbl" data-i18n="top.export"></span></button>
+    </div>
+    <div class="group">
+      <button id="btnUndo" data-i18n-title="top.undo.title">↶</button>
+      <button id="btnRedo" data-i18n-title="top.redo.title">↷</button>
+    </div>
+    <div class="group">
+      <button id="btnPreview" data-i18n-title="top.preview.title"><span class="ic">▶</span><span class="lbl lbl2" data-i18n="top.preview"></span></button>
+      <button id="btnTrace" data-i18n-title="top.trace.title"><span class="ic">✨</span><span class="lbl lbl2" data-i18n="top.trace"></span></button>
+    </div>
+    <div class="spacer"></div>
+    <div class="group">
+      <button id="btnLang" class="has-menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menuLang" data-i18n-title="top.lang.title"><span class="ic">🌐</span><span class="lbl lbl2" id="langName"></span><span class="caret">▾</span></button>
+      <button id="btnTheme" class="has-menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menuTheme" data-i18n-title="top.theme.title"><span class="ic" id="themeIcon">🌙</span><span class="caret">▾</span></button>
+      <button id="btnHelp" data-i18n-title="top.help.title"><span class="ic ic-q">?</span><span class="lbl lbl2" data-i18n="top.help"></span></button>
+      <button id="btnAbout" data-i18n-title="top.about.title"><span class="ic">ⓘ</span><span class="lbl lbl2" data-i18n="top.about"></span></button>
+    </div>
+  </header>
+
+  <div id="main">
+    <aside id="toolbar" class="neon-v"></aside>
+
+    <section id="stage">
+      <canvas id="canvas" tabindex="0"></canvas>
+      <div id="welcome">
+        <div class="welcome-card">
+          <img class="welcome-logo" src="icon.png" alt="" draggable="false" />
+          <h1>Giffact</h1>
+          <p data-i18n="welcome.text"></p>
+          <div class="row center wrap">
+            <button class="primary" id="wOpen"><span class="ic">📂</span> <span data-i18n="welcome.open"></span></button>
+            <button id="wOpenProject"><span class="ic">💾</span> <span data-i18n="welcome.openProject"></span></button>
+            <button id="wDemo" data-i18n-title="welcome.demo.title"><span class="ic">🧪</span> <span data-i18n="welcome.demo"></span></button>
+          </div>
+          <p class="hint" data-i18n="welcome.hint"></p>
+        </div>
+      </div>
+      <div id="dropOverlay" data-i18n="drop.here"></div>
+      <div id="statusbar">
+        <span id="stFrame">—</span>
+        <span id="stTool"></span>
+        <span class="spacer"></span>
+        <span id="stPos"></span>
+        <button id="stZoomOut" data-i18n-title="status.zoomOut">−</button>
+        <span id="stZoom">100%</span>
+        <button id="stZoomIn" data-i18n-title="status.zoomIn">+</button>
+        <button id="stFit" data-i18n="status.fit" data-i18n-title="status.fit.title"></button>
+        <button id="stRotL" data-i18n-title="status.rotL">⟲</button>
+        <span id="stRot">0°</span>
+        <button id="stRotR" data-i18n-title="status.rotR">⟳</button>
+        <button id="stRotReset" data-i18n-title="status.rotReset">0°</button>
+      </div>
+    </section>
+
+    <aside id="side" class="neon-v">
+      <section class="panel" id="pTool">
+        <h3 id="pToolTitle"></h3>
+        <div class="panel-body" id="toolOptions"></div>
+      </section>
+      <section class="panel" id="pStroke">
+        <h3><span data-i18n="panel.selected"></span> <span id="selCount" class="badge">0</span></h3>
+        <div class="panel-body" id="strokeProps"></div>
+      </section>
+      <section class="panel" id="pLayers">
+        <h3><span data-i18n="panel.layers"></span> <span id="layerFrameLbl" class="badge"></span></h3>
+        <div class="panel-body">
+          <div class="row tight">
+            <button id="lyAdd" data-i18n-title="layer.add">＋</button>
+            <button id="lyAddAll" data-i18n-title="layer.addAll.title">＋ <span data-i18n="layer.addAll"></span></button>
+            <button id="lyDup" data-i18n-title="layer.dup" data-i18n-aria="layer.dup"><span class="ic-dup"></span></button>
+            <button id="lyUp" data-i18n-title="layer.up">▲</button>
+            <button id="lyDown" data-i18n-title="layer.down">▼</button>
+            <button id="lyDel" data-i18n-title="layer.del">🗑</button>
+          </div>
+          <ul id="layerList"></ul>
+          <label class="field"><span class="flbl" data-i18n="layer.opacity"></span> <input type="range" id="lyOpacity" min="0" max="100" value="100" /><span id="lyOpacityV">100%</span></label>
+        </div>
+      </section>
+      <section class="panel" id="pFrames">
+        <h3><span data-i18n="panel.frames"></span></h3>
+        <div class="panel-body">
+          <div class="row tight wrap">
+            <button id="frCopyPrev" data-i18n="frames.copyPrev" data-i18n-title="frames.copyPrev.title"></button>
+            <button id="frCopyNext" data-i18n="frames.copyNext" data-i18n-title="frames.copyNext.title"></button>
+          </div>
+          <div class="row tight wrap">
+            <button id="frToRange" data-i18n="frames.toRange" data-i18n-title="frames.toRange.title"></button>
+            <button id="frClear" data-i18n="frames.clear" data-i18n-title="frames.clear.title"></button>
+          </div>
+        </div>
+      </section>
+      <section class="panel" id="pBg">
+        <h3><span data-i18n="panel.bg"></span></h3>
+        <div class="panel-body">
+          <div class="row tight wrap">
+            <label class="chk"><input type="checkbox" id="bgVisible" /> <span data-i18n="bg.show"></span> <kbd>F</kbd></label>
+            <label class="chk"><input type="checkbox" id="bgGray" /> <span data-i18n="bg.gray"></span> <kbd>G</kbd></label>
+          </div>
+          <label class="field"><span class="flbl" data-i18n="bg.opacity"></span> <input type="range" id="bgOpacity" min="0" max="100" /><span id="bgOpacityV"></span></label>
+          <hr />
+          <label class="chk"><input type="checkbox" id="onion" /> <span data-i18n="onion.label"></span> <kbd>O</kbd></label>
+          <div class="grid2">
+            <label class="field"><span class="flbl" data-i18n="onion.prev"></span> <input type="number" id="onionPrev" min="0" max="5" /></label>
+            <input type="color" id="onionPrevColor" data-i18n-title="onion.prevColor" />
+            <label class="field"><span class="flbl" data-i18n="onion.next"></span> <input type="number" id="onionNext" min="0" max="5" /></label>
+            <input type="color" id="onionNextColor" data-i18n-title="onion.nextColor" />
+          </div>
+          <label class="field"><span class="flbl" data-i18n="onion.opacity"></span> <input type="range" id="onionOpacity" min="5" max="100" /><span id="onionOpacityV"></span></label>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <footer id="timeline" class="neon-h neon-top">
+    <div class="tl-controls">
+      <button id="tlFirst" data-i18n-title="tl.first">⏮</button>
+      <button id="tlPrev" data-i18n-title="tl.prev">◀</button>
+      <button id="tlPlay" data-i18n-title="tl.play">▶</button>
+      <button id="tlNext" data-i18n-title="tl.next">▶|</button>
+      <button id="tlLast" data-i18n-title="tl.last">⏭</button>
+      <span id="tlLabel">0 / 0</span>
+      <label class="chk small"><input type="checkbox" id="tlShowLines" checked /> <span data-i18n="tl.showLines"></span></label>
+    </div>
+    <div id="strip"></div>
+  </footer>
+</div>
+
+<!-- Menus (ficam no body para não serem cortados pela barra superior) -->
+<div class="menu" id="menuProject" role="menu" hidden>
+  <button role="menuitem" data-act="new"><span data-i18n="menu.new"></span><kbd class="electron-only">Ctrl+N</kbd></button>
+  <div class="menu-sep" role="separator"></div>
+  <button role="menuitem" data-act="openGif"><span data-i18n="menu.openGif"></span><kbd>Ctrl+O</kbd></button>
+  <button role="menuitem" data-act="openProject"><span data-i18n="menu.openProject"></span><kbd>Ctrl+Shift+O</kbd></button>
+  <div class="menu-sep" role="separator"></div>
+  <button role="menuitem" data-act="save" class="needs-doc"><span data-i18n="menu.save"></span><kbd>Ctrl+S</kbd></button>
+  <button role="menuitem" data-act="saveAs" class="needs-doc"><span data-i18n="menu.saveAs"></span><kbd>Ctrl+Shift+S</kbd></button>
+  <div class="menu-sep" role="separator"></div>
+  <button role="menuitem" data-act="exportPng" class="needs-doc"><span data-i18n="menu.exportPng"></span><kbd>Ctrl+E</kbd></button>
+  <button role="menuitem" data-act="exportSvg" class="needs-doc"><span data-i18n="menu.exportSvg"></span><kbd>Ctrl+Shift+E</kbd></button>
+</div>
+<div class="menu" id="menuLang" role="menu" hidden></div>
+<div class="menu" id="menuTheme" role="menu" hidden>
+  <button role="menuitemradio" data-theme-opt="system"><span><span class="ic">🖥</span> <span data-i18n="theme.system"></span></span><span class="mark">✓</span></button>
+  <button role="menuitemradio" data-theme-opt="dark"><span><span class="ic">🌙</span> <span data-i18n="theme.dark"></span></span><span class="mark">✓</span></button>
+  <button role="menuitemradio" data-theme-opt="light"><span><span class="ic">☀</span> <span data-i18n="theme.light"></span></span><span class="mark">✓</span></button>
+  <div class="menu-sep" role="separator"></div>
+  <label class="menu-check"><input type="checkbox" id="optAnim" /> <span data-i18n="theme.animations"></span></label>
+  <div class="menu-note hint" id="reducedNote" data-i18n="theme.reducedMotion" hidden></div>
+</div>
+
+<!-- Diálogos -->
+<div class="modal" id="dlgExport" hidden>
+  <div class="dialog">
+    <h2 data-i18n="export.title"></h2>
+    <div class="grid2 form">
+      <label data-i18n="export.format"></label>
+      <select id="exFormat"><option value="png" data-i18n="export.format.png"></option><option value="svg" data-i18n="export.format.svg"></option></select>
+      <label data-i18n="export.frames"></label>
+      <div>
+        <select id="exFrames"><option value="all" data-i18n="export.frames.all"></option><option value="current" data-i18n="export.frames.current"></option><option value="range" data-i18n="export.frames.range"></option><option value="drawn" data-i18n="export.frames.drawn"></option></select>
+        <span id="exRangeWrap"> <span data-i18n="export.from"></span> <input type="number" id="exFrom" min="1" class="num" /> <span data-i18n="export.to"></span> <input type="number" id="exTo" min="1" class="num" /></span>
+      </div>
+      <label data-i18n="export.size"></label>
+      <div>
+        <select id="exSizeMode"><option value="scale" data-i18n="export.size.scale"></option><option value="size" data-i18n="export.size.wh"></option></select>
+        <span id="exScaleWrap"><input type="number" id="exScale" min="0.1" max="32" step="0.1" value="2" class="num" />×</span>
+        <span id="exSizeWrap"><input type="number" id="exW" min="1" max="16384" class="num" /> × <input type="number" id="exH" min="1" max="16384" class="num" /> <label class="chk small"><input type="checkbox" id="exLock" checked /> <span data-i18n="export.keepRatio"></span></label></span>
+        <div class="hint" id="exSizeInfo"></div>
+      </div>
+      <label data-i18n="export.bg"></label>
+      <div>
+        <select id="exBg"><option value="transparent" data-i18n="export.bg.transparent"></option><option value="white" data-i18n="export.bg.white"></option><option value="color" data-i18n="export.bg.color"></option></select>
+        <input type="color" id="exBgColor" value="#ffffff" />
+        <label class="chk small"><input type="checkbox" id="exIncludeGif" /> <span data-i18n="export.includeGif"></span></label>
+      </div>
+      <label data-i18n="export.layers"></label>
+      <div id="exLayers" class="layer-checks"></div>
+      <label data-i18n="export.fileName"></label>
+      <div><input type="text" id="exPrefix" value="" /> <span class="hint" id="exNameEx"></span></div>
+    </div>
+    <div class="progress" id="exProgress" hidden><div></div><span></span></div>
+    <div class="row end">
+      <button id="exCancel" data-i18n="common.cancel"></button>
+      <button class="primary" id="exGo"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="dlgRange" hidden>
+  <div class="dialog small">
+    <h2 data-i18n="range.title"></h2>
+    <div class="grid2 form">
+      <label data-i18n="range.what"></label>
+      <select id="rgWhat"><option value="layer" data-i18n="range.what.layer"></option><option value="selection" data-i18n="range.what.selection"></option></select>
+      <label data-i18n="range.frames"></label>
+      <div><span data-i18n="export.from"></span> <input type="number" id="rgFrom" min="1" class="num" /> <span data-i18n="export.to"></span> <input type="number" id="rgTo" min="1" class="num" /></div>
+      <label data-i18n="range.mode"></label>
+      <select id="rgMode"><option value="merge" data-i18n="range.mode.merge"></option><option value="replace" data-i18n="range.mode.replace"></option></select>
+    </div>
+    <p class="hint" data-i18n="range.hint"></p>
+    <div class="row end"><button id="rgCancel" data-i18n="common.cancel"></button><button class="primary" id="rgGo" data-i18n="range.go"></button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlgPreview" hidden>
+  <div class="dialog wide">
+    <h2 data-i18n="preview.title"></h2>
+    <div class="preview-wrap"><canvas id="pvCanvas"></canvas></div>
+    <div class="row tight wrap">
+      <button id="pvPlay"></button>
+      <label class="chk"><input type="checkbox" id="pvBg" /> <span data-i18n="preview.showGif"></span></label>
+      <label class="chk"><input type="checkbox" id="pvGifTiming" checked /> <span data-i18n="preview.gifTiming"></span></label>
+      <label class="field"><span data-i18n="preview.fps"></span> <input type="number" id="pvFps" min="1" max="60" value="12" class="num" /></label>
+      <label class="chk"><input type="checkbox" id="pvLoop" checked /> <span data-i18n="preview.loop"></span></label>
+      <span id="pvLabel" class="hint"></span>
+      <span class="spacer"></span>
+      <button id="pvClose" data-i18n="common.close"></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="dlgTrace" hidden>
+  <div class="dialog small">
+    <h2 data-i18n="trace.title"></h2>
+    <p class="hint" data-i18n="trace.hint"></p>
+    <div class="grid2 form">
+      <label data-i18n="trace.threshold"></label><div class="row"><input type="range" id="trThresh" min="1" max="100" value="45" /><span id="trThreshV"></span></div>
+      <label data-i18n="trace.blur"></label><div class="row"><input type="range" id="trBlur" min="0" max="4" value="1" /><span id="trBlurV"></span></div>
+      <label data-i18n="trace.min"></label><div class="row"><input type="range" id="trMin" min="2" max="80" value="12" /><span id="trMinV"></span></div>
+      <label data-i18n="trace.width"></label><div><input type="number" id="trWidth" min="0.5" max="20" step="0.5" value="1.5" class="num" /> px</div>
+      <label data-i18n="trace.frames"></label><select id="trFrames"><option value="current" data-i18n="trace.frames.current"></option><option value="all" data-i18n="trace.frames.all"></option></select>
+    </div>
+    <div class="progress" id="trProgress" hidden><div></div><span></span></div>
+    <div class="row end"><button id="trCancel" data-i18n="common.cancel"></button><button class="primary" id="trGo" data-i18n="trace.go"></button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlgHelp" hidden>
+  <div class="dialog wide">
+    <h2 data-i18n="help.title"></h2>
+    <h3 class="sub" data-i18n="help.howto"></h3>
+    <ol class="howto">
+      <li data-i18n="help.step1"></li>
+      <li data-i18n="help.step2"></li>
+      <li data-i18n="help.step3"></li>
+      <li data-i18n="help.step4"></li>
+      <li data-i18n="help.step5"></li>
+    </ol>
+    <h3 class="sub" data-i18n="help.shortcuts"></h3>
+    <div id="helpBody" class="help"></div>
+    <div class="row end"><button id="helpAbout" data-i18n="top.about"></button><button id="helpClose" data-i18n="common.close"></button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlgAbout" hidden>
+  <div class="dialog small about neon-box">
+    <img class="about-logo" src="icon.png" alt="" draggable="false" />
+    <h2 class="about-name">Giffact</h2>
+    <div class="about-ver" id="aboutVer"></div>
+    <p class="about-desc" data-i18n="app.description"></p>
+    <p class="hint about-credits"><span data-i18n="about.credits"></span><br /><span data-i18n="about.builtWith"></span><br /><span data-i18n="about.license"></span></p>
+    <div class="about-links">
+      <a class="linkbtn" id="lnkGithub" href="https://github.com/cleitinhodev" target="_blank" rel="noopener noreferrer" data-external><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg><span data-i18n="about.github"></span></a>
+      <a class="linkbtn" id="lnkRepo" href="https://github.com/cleitinhodev/giffact" target="_blank" rel="noopener noreferrer" data-external><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.71 1.71.75.75 0 0 1-1.06 1.06A2.49 2.49 0 0 1 2 11.5zm10.5-1h-8a1 1 0 0 0-1 1v6.71A2.49 2.49 0 0 1 4.5 9h8zM5 12.25V16l1.5-1.13L8 16v-3.75z"/></svg><span data-i18n="about.repo"></span></a>
+      <a class="linkbtn" id="lnkSite" href="https://www.bugzinho.com/" target="_blank" rel="noopener noreferrer" data-external><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm5.9 7h-2.43a12.6 12.6 0 0 0-1-4.87A6.02 6.02 0 0 1 13.9 7zM8 14c-.6 0-1.82-2.03-2-5h4c-.18 2.97-1.4 5-2 5zM6 7c.18-2.97 1.4-5 2-5s1.82 2.03 2 5zM5.53 2.13A12.6 12.6 0 0 0 4.53 7H2.1a6.02 6.02 0 0 1 3.43-4.87zM2.1 9h2.43c.1 1.8.45 3.5 1 4.87A6.02 6.02 0 0 1 2.1 9zm8.37 4.87c.55-1.37.9-3.07 1-4.87h2.43a6.02 6.02 0 0 1-3.43 4.87z"/></svg><span data-i18n="about.site"></span></a>
+      <a class="linkbtn donate" id="lnkDonate" href="https://www.bugzinho.com/donate" target="_blank" rel="noopener noreferrer" data-external><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 14.5 1.6 8.3A3.9 3.9 0 0 1 8 3.2a3.9 3.9 0 0 1 6.4 5.1z"/></svg><span data-i18n="about.donate"></span></a>
+    </div>
+    <div class="row end"><button id="aboutClose" data-i18n="common.close"></button></div>
+  </div>
+</div>
+
+<div class="modal" id="dlgPrompt" hidden>
+  <div class="dialog small">
+    <h2 id="prTitle"></h2>
+    <input type="text" id="prInput" />
+    <div class="row end"><button id="prCancel" data-i18n="common.cancel"></button><button class="primary" id="prOk" data-i18n="common.ok"></button></div>
+  </div>
+</div>
+
+<div id="toasts" role="status" aria-live="polite"></div>
+<input type="file" id="fileInput" accept=".gif,image/gif,.png,.jpg,.jpeg,.webp,.giffact,.gifline,.json" hidden />
+<script src="app.js"></script>
+</body>
+</html>
