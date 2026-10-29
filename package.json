@@ -4,6 +4,7 @@
   "version": "1.1.1",
   "description": "Giffact — trace animated GIFs frame by frame with clean vector linework (PaintTool SAI style) and export PNG/SVG at any size.",
   "main": "app/main.js",
+  "desktopName": "giffact.desktop",
   "author": {
     "name": "cleitinhodev",
     "url": "https://github.com/cleitinhodev"
@@ -23,7 +24,9 @@
     "test:features": "node test/features.mjs",
     "test:features:electron": "node test/features.mjs electron",
     "test:i18n": "node test/i18n.mjs",
-    "test:all": "npm run typecheck && npm run build && npm run test:i18n && npm test && npm run test:features && npm run test:layout && npm run test:electron && npm run test:features:electron && npm run test:layout:electron"
+    "test:all": "npm run typecheck && npm run build && npm run test:i18n && npm test && npm run test:features && npm run test:layout && npm run test:electron && npm run test:features:electron && npm run test:layout:electron",
+    "dist:linux": "node build.mjs --minify && electron-builder --linux AppImage tar.gz deb --x64",
+    "test:linux": "node test/linux-smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
@@ -68,10 +71,11 @@
           ]
         }
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "artifactName": "Giffact-${version}-windows-${arch}.${ext}"
     },
     "portable": {
-      "artifactName": "Giffact-${version}-portatil.exe"
+      "artifactName": "Giffact-${version}-windows-portable.exe"
     },
     "artifactName": "Giffact-${version}-win-${arch}.${ext}",
     "fileAssociations": [
@@ -79,16 +83,64 @@
         "ext": "giffact",
         "name": "Giffact project",
         "description": "Giffact project",
-        "icon": "build/icon.ico"
+        "icon": "build/icon.ico",
+        "mimeType": "application/x-giffact"
       },
       {
         "ext": "gifline",
         "name": "Giffact project (legacy)",
         "description": "Giffact project (legacy .gifline)",
-        "icon": "build/icon.ico"
+        "icon": "build/icon.ico",
+        "mimeType": "application/x-gifline"
       }
     ],
-    "copyright": "Copyright © 2026 cleitinhodev"
+    "copyright": "Copyright © 2026 cleitinhodev",
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icons",
+      "category": "Graphics",
+      "executableName": "giffact",
+      "artifactName": "Giffact-${version}-linux-${arch}.${ext}",
+      "synopsis": "Trace animated GIFs with clean vector linework",
+      "description": "Giffact: trace animated GIFs frame by frame with clean, pressure-sensitive vector linework (PaintTool SAI style) and export PNG/SVG at any resolution.",
+      "maintainer": "cleitinhodev <139408626+cleitinhodev@users.noreply.github.com>",
+      "vendor": "cleitinhodev",
+      "syncDesktopName": true,
+      "desktop": {
+        "entry": {
+          "Name": "Giffact",
+          "GenericName": "GIF Linework Tracer",
+          "Comment": "Trace animated GIFs with clean vector linework and export PNG/SVG",
+          "Categories": "Graphics;2DGraphics;VectorGraphics;",
+          "Keywords": "gif;linework;lineart;trace;animation;vector;"
+        }
+      }
+    },
+    "appImage": {
+      "artifactName": "Giffact-${version}-linux-x86_64.AppImage"
+    },
+    "deb": {
+      "artifactName": "Giffact-${version}-linux-amd64.deb"
+    }
   },
   "homepage": "https://github.com/cleitinhodev/giffact",
   "repository": {

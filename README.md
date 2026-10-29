@@ -14,7 +14,7 @@
   <img src="docs/screenshots/dark-neon.png" alt="Giffact, dark theme" width="860" />
 </p>
 
-Giffact runs as a Windows desktop app (Electron) and as a plain web page. Everything happens locally: your GIFs and projects never leave your computer.
+Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain web page. Everything happens locally: your GIFs and projects never leave your computer.
 
 ## Features
 - **Open GIF** (button, `Ctrl+O` or drag and drop). PNG, JPG and WebP open as a single frame. Disposal methods, partial frames, transparency and per-frame delays are decoded correctly.
@@ -65,12 +65,20 @@ Giffact runs as a Windows desktop app (Electron) and as a plain web page. Everyt
   <img src="docs/screenshots/japanese.png" alt="Japanese interface" width="420" />
 </p>
 
-## Download / run
-**Windows:** build with `npm run dist:win` (see below). It produces:
-- `dist/Giffact-1.1.1-portatil.exe`: a single portable executable with nothing to install.
-- `dist/Giffact-1.1.1-win-x64.zip`: unzip it and run `Giffact.exe`. This starts faster than the portable exe.
+## Download
+Grab the latest build from the **[Releases page](https://github.com/cleitinhodev/giffact/releases/latest)**. Every release lists SHA-256 checksums in `SHA256SUMS.txt`.
 
-> The executable is not code-signed, so Windows SmartScreen may warn you. Click *More info → Run anyway*.
+| System | File | How to run |
+|---|---|---|
+| Windows 10/11 x64 | `Giffact-1.1.1-windows-portable.exe` | A single portable executable with nothing to install. Just run it. |
+| Windows 10/11 x64 | `Giffact-1.1.1-windows-x64.zip` | Unzip it and run `Giffact.exe`. This starts faster than the portable exe. |
+| Linux x64 (any distro) | `Giffact-1.1.1-linux-x86_64.AppImage` | `chmod +x Giffact-1.1.1-linux-x86_64.AppImage` and run it. |
+| Debian / Ubuntu / Mint | `Giffact-1.1.1-linux-amd64.deb` | `sudo apt install ./Giffact-1.1.1-linux-amd64.deb`, then open Giffact from the app menu (Graphics). |
+| Linux x64 (manual) | `Giffact-1.1.1-linux-x64.tar.gz` | Extract it and run `./giffact` inside the folder. |
+
+> **Windows:** the executable is not code-signed, so SmartScreen may warn you. Click *More info → Run anyway*.
+>
+> **Linux:** AppImages need FUSE 2. If it doesn't start, install `libfuse2` (`libfuse2t64` on Ubuntu 24.04+), or run it with `--appimage-extract-and-run`.
 
 **Web:** after `npm run build`, serve the `app/` folder with any static server (for example `npx http-server app`) and open `index.html`. On the web, exports download as a `.zip` and projects are saved as downloads.
 
@@ -81,6 +89,7 @@ npm install
 npm run build        # bundles app/ (renderer + Electron main/preload)
 npm start            # runs in Electron
 npm run dist:win     # Windows x64: portable .exe + .zip in dist/
+npm run dist:linux   # Linux x64: AppImage + .deb + .tar.gz in dist/
 ```
 
 ## Tests
@@ -94,6 +103,7 @@ npm run test:layout               # 300/600 frames at 1280×720, 1920×1080 and 
 xvfb-run -a npm run test:electron
 xvfb-run -a npm run test:features:electron
 xvfb-run -a npm run test:layout:electron
+xvfb-run -a npm run test:linux   # packaged Linux build: opens a GIF, draws, exports PNG (pass an .AppImage path to test it)
 node test/screenshots.mjs         # regenerates docs/screenshots
 ```
 
