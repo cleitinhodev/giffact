@@ -288,7 +288,7 @@ export const SHORTCUTS: [Key, ScItem[]][] = [
   ]],
   ['sc.curveLine', [
     ['sc.finish', 'sc.finish.k'], ['sc.finishClosed', 'sc.finishClosed.k'],
-    ['sc.undoPoint', 'Backspace'], ['sc.cancel', 'Esc'], ['sc.angle', 'Shift'],
+    ['sc.undoPoint', 'sc.undoPoint.k'], ['sc.cancel', 'Esc'], ['sc.angle', 'Shift'],
   ]],
   ['sc.editPoints', [
     ['sc.movePoint', 'sc.movePoint.k'], ['sc.insertPoint', 'sc.insertPoint.k'],

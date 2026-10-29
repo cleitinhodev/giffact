@@ -24,8 +24,8 @@ O Giffact funciona como app de Windows (Electron) e como página web comum. Tudo
 
   | Tecla | Ferramenta | Uso |
   |---|---|---|
-  | `C` | **Curva** | Clique para marcar pontos e a curva passa suavemente por eles. `Enter`, duplo clique ou botão direito termina; clicar no 1º ponto fecha. |
-  | `L` | **Linha reta** | Igual à curva, mas com segmentos retos. `Shift` trava em passos de 15°. |
+  | `C` | **Curva** | Clique para marcar pontos e a curva passa suavemente por eles. O **botão direito** (ou `Backspace`) volta ao ponto anterior e continua a mesma curva; `Enter` ou duplo clique termina; clicar no 1º ponto (ou `Shift+Enter`) fecha; `Esc` cancela. |
+  | `L` | **Linha reta** | Igual à curva, mas com segmentos retos (o botão direito também volta um ponto). `Shift` trava em passos de 15°. |
   | `B` | **Caneta** | Mão livre com **estabilizador** (`Shift+[ ]`). Vira uma curva editável ao soltar. |
   | `N` | **Editar pontos** | Arraste pontos, arraste a linha para inserir um ponto, `Alt+clique` apaga um ponto, `Ctrl+arrastar` move o traço inteiro. |
   | `W` | **Espessura** | Arraste sobre um traço para engrossar ou afinar o traço todo. |
@@ -46,6 +46,9 @@ O Giffact funciona como app de Windows (Electron) e como página web comum. Tudo
   - Você escolhe quais camadas e quadros entram.
 - **Projetos** (`Ctrl+S`): arquivos `.giffact` com o GIF embutido. Projetos antigos `.gifline`/`.json` do GIF Linework continuam abrindo.
 
+## Novidades da 1.1.1
+- Ferramentas Curva e Linha: **o botão direito agora volta ao ponto anterior** e mantém a linha em andamento, em vez de encerrá-la. Para terminar, use `Enter` ou duplo clique.
+
 ## Novidades da 1.1
 - Novo nome e ícone: **Giffact**.
 - Menu **Projeto**: Novo, Abrir, Salvar (`Ctrl+S`), Salvar como (`Ctrl+Shift+S`) e Exportar PNG/SVG.
@@ -61,8 +64,8 @@ O Giffact funciona como app de Windows (Electron) e como página web comum. Tudo
 
 ## Baixar / rodar
 **Windows:** gere com `npm run dist:win` (veja abaixo). Saem dois arquivos:
-- `dist/Giffact-1.1.0-portatil.exe`: um executável único e portátil, sem instalação.
-- `dist/Giffact-1.1.0-win-x64.zip`: descompacte e abra o `Giffact.exe`. Ele abre mais rápido que o portátil.
+- `dist/Giffact-1.1.1-portatil.exe`: um executável único e portátil, sem instalação.
+- `dist/Giffact-1.1.1-win-x64.zip`: descompacte e abra o `Giffact.exe`. Ele abre mais rápido que o portátil.
 
 > O executável não é assinado digitalmente, então o Windows SmartScreen pode avisar. Clique em *Mais informações → Executar assim mesmo*.
 

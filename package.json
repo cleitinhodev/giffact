@@ -1,7 +1,7 @@
 {
   "name": "giffact",
   "productName": "Giffact",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Giffact — trace animated GIFs frame by frame with clean vector linework (PaintTool SAI style) and export PNG/SVG at any size.",
   "main": "app/main.js",
   "author": {

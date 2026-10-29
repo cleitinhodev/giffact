@@ -211,7 +211,10 @@ class PointsTool implements Tool {
     return this.pts.length >= 3 && S.settings.closeCurveSnap && Math.hypot(p.x - this.pts[0].x, p.y - this.pts[0].y) <= px(8);
   }
   down(p: PointerInfo) {
-    if (p.button === 2) { this.finish(false); return; }
+    // botão direito: volta ao ponto anterior (desfaz o último ponto) e continua a mesma linha
+    if (p.button === 2) { this.undoPoint(); return; }
+    const prevDownT = this.lastDownT;
+    this.lastDownT = p.time;
     if (!this.pts.length) {
       this.layer = editableLayer();
       if (!this.layer) return;
@@ -220,13 +223,20 @@ class PointsTool implements Tool {
     if (this.nearFirst(q)) { this.finish(true); return; }
     const last = this.pts[this.pts.length - 1];
     if (last && Math.hypot(q.x - last.x, q.y - last.y) <= px(4)) {
-      // clique repetido no último ponto (ou duplo clique) termina
-      if (p.time - this.lastDownT < 500 || this.pts.length >= 2) { this.finish(false); }
+      // 2º clique rápido no mesmo lugar = duplo clique: termina. Clique lento repetido não duplica o ponto.
+      if (p.time - prevDownT < 500) this.finish(false);
       return;
     }
-    this.lastDownT = p.time;
     this.pts.push({ x: q.x, y: q.y, p: pressureToP(p.pressure) });
     this.hov = q;
+  }
+  /** Remove o último ponto; se não sobrar nenhum, cancela a linha em andamento (sem criar traço). */
+  undoPoint() {
+    if (!this.pts.length) return;
+    this.pts.pop();
+    this.lastDownT = 0;
+    if (!this.pts.length) this.layer = null;
+    requestRender();
   }
   move(p: PointerInfo) { this.hov = this.snap(p); hoverP = p; }
   hover(p: PointerInfo) { this.hov = this.snap(p); hoverP = p; }
@@ -252,9 +262,7 @@ class PointsTool implements Tool {
     if (e.key === 'Enter') { this.finish(e.shiftKey); return true; }
     if (e.key === 'Escape') { this.cancel(); return true; }
     if (e.key === 'Backspace' || (e.key.toLowerCase() === 'z' && (e.ctrlKey || e.metaKey) && !e.shiftKey)) {
-      this.pts.pop();
-      if (!this.pts.length) this.layer = null;
-      requestRender();
+      this.undoPoint();
       return true;
     }
     return false;

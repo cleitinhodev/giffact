@@ -370,7 +370,112 @@ if (MODE === 'web') {
   ok(info.name === 'Giffact', `app.getName() = "${info.name}"`);
 }
 
+// ---------------------------------------------------------------- 7. Curva/Linha: botão direito volta um ponto
+console.log(`[${MODE}] 7) Curva e Linha: botão direito volta ao ponto anterior (mouse real)`);
+await stubConfirm();
+await page.evaluate(async () => { const a = window.__app; a.S.dirty = false; await a.loadAny('sample_anime.gif', a.makeDemoGif()); a.fitView(); });
+await waitFor(() => window.__app.S.frames.length === 12);
+await sleep(300);
+const cbox = await page.locator('#canvas').boundingBox();
+// ponto na tela relativo ao centro do canvas
+const P = (dx, dy) => [cbox.x + cbox.width / 2 + dx, cbox.y + cbox.height / 2 + dy];
+const toDoc = (sx, sy) => page.evaluate(([sx, sy]) => {
+  const S = window.__app.S, v = S.view, c = document.getElementById('canvas'), r = c.getBoundingClientRect();
+  const m = new DOMMatrix().translate(c.clientWidth / 2 + v.panX, c.clientHeight / 2 + v.panY).rotate(v.rot).scale(v.zoom).translate(-S.docW / 2, -S.docH / 2);
+  const p = m.inverse().transformPoint(new DOMPoint(sx - r.left, sy - r.top));
+  return [p.x, p.y];
+}, [sx, sy]);
+const allStrokes = () => page.evaluate(() => { const S = window.__app.S; return S.docs[S.cur].layers.flatMap((l) => l.strokes.map((s) => ({ kind: s.kind, closed: s.closed, pts: s.pts.map((q) => [q.x, q.y]) }))); });
+const inProgress = () => page.evaluate(() => { const a = window.__app; const t = a.TOOLS[a.S.tool]; return { tool: a.S.tool, n: t.pts ? t.pts.length : -1 }; });
+const leftClick = async (dx, dy) => { const [x, y] = P(dx, dy); await page.mouse.click(x, y); await sleep(120); };
+const rightClick = async (dx, dy) => { const [x, y] = P(dx, dy); await page.mouse.click(x, y, { button: 'right' }); await sleep(120); };
+// menu de contexto bloqueado no canvas
+await page.evaluate(() => { window.__ctx = []; window.addEventListener('contextmenu', (e) => { if (e.target.id === 'canvas') window.__ctx.push(e.defaultPrevented); }); });
+await page.click('#canvas', { position: { x: 5, y: 5 } }).catch(() => {});
+await page.keyboard.press('c');
+ok((await inProgress()).tool === 'curve', 'Ferramenta Curva ativa (tecla C)');
+await page.keyboard.press('Escape');
+const base = (await allStrokes()).length;
+const clicks = [[-150, -60], [-90, -100], [-30, -40], [30, -90]];
+for (const [x, y] of clicks) await leftClick(x, y);
+ok((await inProgress()).n === 4, `4 cliques esquerdos = 4 pontos (${(await inProgress()).n})`);
+await rightClick(30, -90);
+ok((await inProgress()).n === 3 && (await allStrokes()).length === base, 'Botão direito: volta ao ponto anterior (3 pontos), sem terminar nem criar traço');
+await rightClick(100, 60);
+let ip = await inProgress();
+ok(ip.n === 2 && ip.tool === 'curve' && (await allStrokes()).length === base, `2º botão direito: 2 pontos, curva continua em andamento (${ip.n})`);
+ok((await page.evaluate(() => window.__ctx)).length === 2 && (await page.evaluate(() => window.__ctx)).every(Boolean), 'Botão direito não abre o menu de contexto no canvas');
+await leftClick(60, -20);
+await leftClick(110, -70);
+ok((await inProgress()).n === 4 && (await allStrokes()).length === base, 'Continua a mesma curva: +2 pontos = 4, nenhum traço novo');
+// clique lento repetido no último ponto não termina nem duplica
+await sleep(650); await leftClick(110, -70);
+ok((await inProgress()).n === 4 && (await allStrokes()).length === base, 'Clique simples repetido no último ponto não termina a curva');
+{ const [x, y] = P(160, -10); await page.mouse.dblclick(x, y); await sleep(200); }
+let st = await allStrokes();
+const nc = st[st.length - 1];
+const expect = [];
+for (const [x, y] of [clicks[0], clicks[1], [60, -20], [110, -70], [160, -10]]) expect.push(await toDoc(...P(x, y)));
+const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]) < 1.5;
+ok(st.length === base + 1 && nc.kind === 'curve' && nc.pts.length === 5 && nc.pts.every((q, i) => near(q, expect[i])),
+  `Duplo clique termina: 1 traço de curva com 5 pontos nos lugares certos (2 mantidos + 2 novos + o do duplo clique): ${nc?.pts.length} pts`);
+ok((await inProgress()).n === 0, 'Depois do duplo clique nada fica em andamento');
+// Enter também termina
+for (const [x, y] of [[-150, 60], [-100, 100], [-50, 60]]) await leftClick(x, y);
+await rightClick(0, 0);
+await page.keyboard.press('Enter'); await sleep(120);
+st = await allStrokes();
+ok(st.length === base + 2 && st[st.length - 1].pts.length === 2 && (await inProgress()).n === 0, `Enter termina: 3 pontos − 1 (botão direito) = traço com ${st[st.length - 1].pts.length} pontos`);
+// botão direito no único ponto cancela, sem criar traço
+await leftClick(-120, 120);
+await rightClick(-120, 120);
+ok((await inProgress()).n === 0 && (await allStrokes()).length === base + 2, 'Botão direito no único ponto: cancela a curva sem criar traço');
+await rightClick(-60, 120);
+ok((await allStrokes()).length === base + 2, 'Botão direito sem curva em andamento não faz nada');
+await leftClick(-120, 120); await leftClick(-60, 130);
+ok((await inProgress()).n === 2, 'Depois de cancelar, uma curva nova começa normalmente');
+await page.keyboard.press('Backspace'); await sleep(60);
+ok((await inProgress()).n === 1, 'Backspace continua removendo o último ponto');
+await page.keyboard.press('Escape'); await sleep(60);
+ok((await inProgress()).n === 0 && (await allStrokes()).length === base + 2, 'Esc continua cancelando');
+// fechar clicando no 1º ponto continua funcionando
+for (const [x, y] of [[-40, 40], [20, 40], [20, 100]]) await leftClick(x, y);
+await leftClick(-40, 40);
+st = await allStrokes();
+ok(st.length === base + 3 && st[st.length - 1].closed === true && st[st.length - 1].pts.length === 3, 'Clicar no 1º ponto ainda fecha a curva');
+// Linha reta: mesmo comportamento
+await page.keyboard.press('l');
+ok((await inProgress()).tool === 'line', 'Ferramenta Linha ativa (tecla L)');
+for (const [x, y] of [[-160, -120], [-110, -120], [-60, -130]]) await leftClick(x, y);
+await rightClick(-60, -130);
+ip = await inProgress();
+ok(ip.n === 2 && (await allStrokes()).length === base + 3, `Linha: botão direito volta um ponto e continua (${ip.n} pontos)`);
+await leftClick(-20, -110);
+{ const [x, y] = P(20, -125); await page.mouse.dblclick(x, y); await sleep(200); }
+st = await allStrokes();
+ok(st.length === base + 4 && st[st.length - 1].kind === 'line' && st[st.length - 1].pts.length === 4, `Linha: duplo clique termina com ${st[st.length - 1].pts.length} pontos`);
+for (const [x, y] of [[100, 100], [150, 100]]) await leftClick(x, y);
+await page.keyboard.press('Enter'); await sleep(120);
+st = await allStrokes();
+ok(st.length === base + 5 && st[st.length - 1].kind === 'line' && st[st.length - 1].pts.length === 2, 'Linha: Enter termina');
+ok((await allStrokes()).length - base === 5, 'Nenhum traço extra: exatamente 5 traços criados no teste');
+// textos de ajuda
+await page.keyboard.press('c'); await sleep(100);
+const hint = await page.evaluate(() => document.getElementById('side').textContent);
+ok(hint.includes('O botão direito volta ao ponto anterior') && !hint.includes('ou botão direito termina'), 'Dica da ferramenta Curva atualizada (pt-BR)');
+await page.click('#btnHelp'); await sleep(150);
+const helpTxt = await page.evaluate(() => [...document.querySelectorAll('#helpBody div')].map((d) => d.textContent));
+ok(helpTxt.some((x) => x.includes('Desfazer último ponto') && x.includes('Botão direito / Backspace')) && helpTxt.some((x) => x.includes('Terminar') && x.endsWith('Enter / duplo clique')),
+  'Atalhos: "Botão direito / Backspace" desfaz ponto; terminar = "Enter / duplo clique"');
+await page.keyboard.press('Escape');
+await page.evaluate(() => { window.__app.S.dirty = false; });
+
 ok(errors.length === 0, 'Sem erros no console' + (errors.length ? ': ' + errors.join(' | ') : ''));
-if (MODE === 'electron') { await page.evaluate(() => localStorage.clear()); await app.close(); } else { await browser.close(); server.close(); }
+if (MODE === 'electron') {
+  await page.evaluate(() => localStorage.clear());
+  // há traços não salvos: o app pergunta antes de sair (resposta automática "Sair sem salvar")
+  await app.evaluate(({ dialog }) => { dialog.showMessageBoxSync = () => 0; });
+  await app.close();
+} else { await browser.close(); server.close(); }
 console.log(failures ? `\n${failures} FALHA(S)` : `\nFEATURES ${MODE.toUpperCase()} OK`);
 process.exit(failures ? 1 : 0);
