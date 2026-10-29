@@ -57,10 +57,29 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
 - **10 idiomas**: English, Português (Brasil), Español, Français, Deutsch, Italiano, 日本語, 中文（简体）, 한국어 e Русский. O idioma segue o do sistema por padrão e pode ser trocado no menu 🌐.
 - Janelas de **Ajuda** (passo a passo e atalhos) e **Sobre**.
 
-<p align="center">
-  <img src="docs/screenshots/dark-neon.png" alt="Tema escuro com neon" width="420" />
-  <img src="docs/screenshots/about.png" alt="Janela Sobre" width="420" />
-</p>
+## Capturas de tela
+<table>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/dark-neon.png" alt="Tema escuro com neon" /><br /><sub><b>Tema escuro</b> com neon</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/onion-skin.png" alt="Papel de seda" /><br /><sub><b>Papel de seda</b>: quadro anterior em vermelho, próximo em azul</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/edit-points.png" alt="Ferramenta Editar pontos" /><br /><sub><b>Editar pontos</b>: toda curva continua editável</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/export.png" alt="Janela de exportação" /><br /><sub><b>Exportar</b> PNG/SVG em qualquer escala</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Linhas exportadas em 2x" /><br /><sub>O resultado: só as linhas, exportadas em 2× (960×960)</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/preview.png" alt="Prévia animada" /><br /><sub><b>Prévia animada</b> dos quadros traçados</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/project-menu.png" alt="Menu Projeto" /><br /><sub>Menu <b>Projeto</b></sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/about.png" alt="Janela Sobre" /><br /><sub>Janela <b>Sobre</b></sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/japanese.png" alt="Interface em japonês" /><br /><sub>10 idiomas (aqui: 日本語)</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/light.png" alt="Tema claro em inglês" /><br /><sub><b>Tema claro</b> (em inglês)</sub></td>
+  </tr>
+</table>
 
 ## Download
 Baixe a versão mais recente na **[página de Releases](https://github.com/cleitinhodev/giffact/releases/latest)**. Cada release traz as somas SHA-256 em `SHA256SUMS.txt`.
@@ -101,7 +120,7 @@ xvfb-run -a npm run test:electron
 xvfb-run -a npm run test:features:electron
 xvfb-run -a npm run test:layout:electron
 xvfb-run -a npm run test:linux   # build Linux empacotado: abre GIF, desenha, exporta PNG (passe o caminho de um .AppImage para testá-lo)
-node test/screenshots.mjs         # regenera docs/screenshots
+node test/screenshots.mjs [projeto.giffact | animacao.gif]   # regenera docs/screenshots (usa o GIF de demonstração se nenhum arquivo for passado)
 ```
 
 ## Links
