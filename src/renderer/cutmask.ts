@@ -29,7 +29,11 @@ export function maskPolyline(pts: CutPt[], closed = true): number[] {
 }
 
 export function maskPath2D(m: CutMask, sx = 1, sy = sx): Path2D {
-  const poly = maskPolyline(m.pts, true);
+  return ptsPath2D(m.pts, sx, sy);
+}
+/** caminho fechado de uma lista de pontos (máscara principal ou área removida) */
+export function ptsPath2D(pts: CutPt[], sx = 1, sy = sx): Path2D {
+  const poly = maskPolyline(pts, true);
   const p = new Path2D();
   for (let i = 0; i < poly.length; i += 2) {
     const x = poly[i] * sx, y = poly[i + 1] * sy;
@@ -51,8 +55,24 @@ export function maskBounds(m: CutMask): { x: number; y: number; w: number; h: nu
 
 let hitCtx: CanvasRenderingContext2D | null = null;
 export function pointInMask(m: CutMask, x: number, y: number): boolean {
+  return pointInPts(m.pts, x, y);
+}
+export function pointInPts(pts: CutPt[], x: number, y: number): boolean {
   if (!hitCtx) hitCtx = document.createElement('canvas').getContext('2d')!;
-  return hitCtx.isPointInPath(maskPath2D(m), x, y, 'nonzero');
+  return hitCtx.isPointInPath(ptsPath2D(pts), x, y, 'nonzero');
+}
+export function hasHoles(m: CutMask): boolean { return !!m.holes && m.holes.length > 0; }
+
+/** Desenha a máscara final (opaca dentro, transparente fora) em `g`, já escalada: principal − áreas removidas. */
+export function drawMaskAlpha(g: CanvasRenderingContext2D, m: CutMask, sx: number, sy: number) {
+  g.save();
+  g.fillStyle = '#000';
+  g.fill(ptsPath2D(m.pts, sx, sy), 'nonzero');
+  if (m.holes?.length) {
+    g.globalCompositeOperation = 'destination-out';
+    for (const h of m.holes) g.fill(ptsPath2D(h, sx, sy), 'nonzero');
+  }
+  g.restore();
 }
 
 // ---------- pixels recortados (cache LRU por máscara/quadro/tamanho) ----------
@@ -85,10 +105,21 @@ export function renderCut(m: CutMask, frame: HTMLCanvasElement, W: number, H: nu
   if (m.pts.length < 3) return c;
   const sx = c.width / frame.width, sy = c.height / frame.height;
   const f = Math.max(0, m.feather || 0);
-  if (f > 0) g.filter = `blur(${(f * Math.max(sx, sy)) / 2}px)`;
-  g.fillStyle = '#000';
-  g.fill(maskPath2D(m, sx, sy), 'nonzero');
-  g.filter = 'none';
+  if (!hasHoles(m)) {
+    if (f > 0) g.filter = `blur(${(f * Math.max(sx, sy)) / 2}px)`;
+    g.fillStyle = '#000';
+    g.fill(maskPath2D(m, sx, sy), 'nonzero');
+    g.filter = 'none';
+  } else if (f > 0) {
+    // máscara combinada nítida → borda difusa aplicada uma vez no resultado (também nas bordas das áreas removidas)
+    const hard = document.createElement('canvas');
+    hard.width = c.width; hard.height = c.height;
+    drawMaskAlpha(hard.getContext('2d')!, m, sx, sy);
+    g.filter = `blur(${(f * Math.max(sx, sy)) / 2}px)`;
+    g.drawImage(hard, 0, 0);
+    g.filter = 'none';
+    hard.width = hard.height = 0;
+  } else drawMaskAlpha(g, m, sx, sy);
   g.globalCompositeOperation = 'source-in';
   g.imageSmoothingEnabled = true;
   g.imageSmoothingQuality = 'high';
@@ -97,9 +128,17 @@ export function renderCut(m: CutMask, frame: HTMLCanvasElement, W: number, H: nu
   return c;
 }
 
+const clonePts = (pts: CutPt[]) => pts.map((p) => (p.c ? { x: p.x, y: p.y, c: 1 } : { x: p.x, y: p.y }));
+const validPts = (pts: any) => Array.isArray(pts) && pts.length >= 3 && pts.every((p: any) => p && Number.isFinite(p.x) && Number.isFinite(p.y));
+export function cloneHoles(holes: any): CutPt[][] {
+  return Array.isArray(holes) ? holes.filter(validPts).map(clonePts) : [];
+}
 export function cloneMask(m: CutMask): CutMask {
-  return { pts: m.pts.map((p) => (p.c ? { x: p.x, y: p.y, c: 1 } : { x: p.x, y: p.y })), feather: m.feather || 0 };
+  const out: CutMask = { pts: clonePts(m.pts), feather: m.feather || 0 };
+  const hs = cloneHoles(m.holes);
+  if (hs.length) out.holes = hs;
+  return out;
 }
 export function isValidMask(m: any): m is CutMask {
-  return !!m && Array.isArray(m.pts) && m.pts.length >= 3 && m.pts.every((p: any) => p && Number.isFinite(p.x) && Number.isFinite(p.y));
+  return !!m && validPts(m.pts);
 }

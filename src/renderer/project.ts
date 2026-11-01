@@ -72,7 +72,7 @@ export async function loadProjectBytes(bytes: Uint8Array): Promise<void> {
       }));
       // camada de recorte (1.2+): máscara válida ou vira camada comum
       if (L.cut !== undefined) {
-        if (isValidMask(L.cut)) { L.cut = cloneMask({ pts: L.cut.pts, feather: Number.isFinite(+L.cut.feather) ? Math.max(0, +L.cut.feather) : 0 }); L.strokes = []; }
+        if (isValidMask(L.cut)) { L.cut = cloneMask({ pts: L.cut.pts, feather: Number.isFinite(+L.cut.feather) ? Math.max(0, +L.cut.feather) : 0, holes: L.cut.holes }); L.strokes = []; }
         else delete L.cut;
       }
     }

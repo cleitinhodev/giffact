@@ -154,7 +154,7 @@ export function refreshToolOptions() {
       box.append(...cutoutControls());
       break;
   }
-  box.append(hint(toolHint(def.id)));
+  if (!(def.id === 'cutout' && (TOOLS.cutout as CutoutTool).mode === 'sub')) box.append(hint(toolHint(def.id)));
 }
 
 function cutoutControls(): HTMLElement[] {
@@ -167,6 +167,11 @@ function cutoutControls(): HTMLElement[] {
     b.onclick = () => { st.cutPoly = poly; settingsChanged(); refreshToolOptions(); };
     seg.append(b);
   }
+  const btn = (id: string, label: string, enabled: boolean, fn: () => void, primary = false) => {
+    const b = h('button', { id, class: primary ? 'primary' : '' }, label) as HTMLButtonElement;
+    b.disabled = !enabled; b.onclick = fn; return b;
+  };
+  if (tool.mode === 'sub') return subtractControls(tool, seg, btn);
   const feather = slider(t('opt.cut.feather'), 'cutFeather', 0, 20, 0.5, (v) => v + ' px');
   const scope = h('select', { id: 'cutScope' },
     h('option', { value: 'current' }, t('opt.cut.frames.current')),
@@ -183,10 +188,6 @@ function cutoutControls(): HTMLElement[] {
   from.onchange = () => { tool.rangeFrom = Math.round(+from.value || 1); };
   to.onchange = () => { tool.rangeTo = Math.round(+to.value || n); };
   scope.onchange = () => { st.cutScope = scope.value as Settings['cutScope']; range.style.display = st.cutScope === 'range' ? '' : 'none'; settingsChanged(); };
-  const btn = (id: string, label: string, enabled: boolean, fn: () => void, primary = false) => {
-    const b = h('button', { id, class: primary ? 'primary' : '' }, label) as HTMLButtonElement;
-    b.disabled = !enabled; b.onclick = fn; return b;
-  };
   const L = activeLayer();
   const status = tool.mode === 'draw' ? t('opt.cut.pending.draw', { n: tool.pts.length }) : tool.mode === 'edit' ? t('opt.cut.pending.edit') : '';
   const out: HTMLElement[] = [
@@ -201,7 +202,39 @@ function cutoutControls(): HTMLElement[] {
     btn('cutCancel', t('opt.cut.cancel'), tool.pending, () => tool.cancel()),
     btn('cutEditMask', t('opt.cut.editMask'), !tool.pending && !!L?.cut, () => tool.editActive()),
   ));
+  // função especial da camada de recorte já aplicada: tirar partes internas com áreas vermelhas
+  if (L?.cut && !tool.pending) {
+    const sub = btn('cutSubtract', t('opt.cut.subtract'), !L.locked, () => tool.startSub());
+    sub.classList.add('cut-sub');
+    sub.title = t('opt.cut.subtract.tip');
+    out.push(h('div', { class: 'row tight wrap' }, sub));
+  }
   return out;
+}
+
+function subtractControls(tool: CutoutTool, seg: HTMLElement, btn: (id: string, label: string, enabled: boolean, fn: () => void, primary?: boolean) => HTMLButtonElement): HTMLElement[] {
+  const n = tool.subShapes.length;
+  const scope = h('select', { id: 'cutSubScope' },
+    h('option', { value: 'current' }, t('opt.cut.frames.current')),
+    h('option', { value: 'layer' }, t('opt.cut.sub.frames.layer'))) as HTMLSelectElement;
+  scope.value = tool.subScope;
+  scope.onchange = () => { tool.subScope = scope.value === 'layer' ? 'layer' : 'current'; };
+  const status = tool.subCur.length
+    ? t('opt.cut.sub.drawing', { n: tool.subCur.length })
+    : t('opt.cut.sub.status', { name: tool.subName || '', n });
+  const remove = btn('cutRemove', t('opt.cut.sub.remove'), n > 0 || tool.subCur.length >= 3, () => tool.removeAreas(), true);
+  remove.classList.add('danger');
+  const pending = n > 0 || tool.subCur.length > 0;
+  return [
+    h('div', { class: 'cut-sub-title' }, h('span', { class: 'cut-sub-dot' }), t('opt.cut.subtract')),
+    seg,
+    h('label', { class: 'field' }, t('opt.cut.frames'), scope),
+    h('div', { class: 'hint cut-status' }, status),
+    h('div', { class: 'row tight wrap' },
+      remove,
+      btn('cutCancel', pending ? t('opt.cut.cancel') : t('opt.cut.sub.done'), true, () => tool.cancel())),
+    hint(t('opt.cut.sub.hint')),
+  ];
 }
 
 // ---------------- traços selecionados ----------------

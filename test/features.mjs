@@ -318,7 +318,7 @@ ok(await page.textContent('#btnOpen .lbl') === 'Abrir GIF', 'Volta para portugu√
 // ---------------------------------------------------------------- 5. Ajuda e Sobre
 console.log(`[${MODE}] 5) Ajuda e Sobre`);
 await page.click('#btnHelp');
-ok(await page.isVisible('#dlgHelp') && await page.locator('#dlgHelp ol.howto li').count() === 6 && (await page.textContent('#helpBody')).includes('Ctrl+S'), 'Ajuda: passo a passo (6 itens) + atalhos');
+ok(await page.isVisible('#dlgHelp') && await page.locator('#dlgHelp ol.howto li').count() === 7 && (await page.textContent('#helpBody')).includes('Ctrl+S'), 'Ajuda: passo a passo (7 itens) + atalhos');
 await page.click('#helpAbout');
 ok(await page.isVisible('#dlgAbout') && await page.isHidden('#dlgHelp'), 'Bot√£o "Sobre" dentro da Ajuda abre o Sobre');
 await page.click('#aboutClose');

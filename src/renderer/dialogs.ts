@@ -302,6 +302,7 @@ export const SHORTCUTS: [Key, ScItem[]][] = [
   ['sc.cutout', [
     ['sc.cutClose', 'sc.cutClose.k'], ['sc.undoPoint', 'sc.undoPoint.k'], ['sc.cutCorner', 'sc.cutCorner.k'],
     ['sc.cutEdit', 'sc.cutEdit.k'], ['sc.cutApply', 'Enter'], ['sc.cutCancel', 'Esc'],
+    ['sc.cutSubtract', 'S'], ['sc.cutRemove', 'Enter'], ['sc.cutDelArea', 'Delete'],
   ]],
   ['sc.editPoints', [
     ['sc.movePoint', 'sc.movePoint.k'], ['sc.insertPoint', 'sc.insertPoint.k'],

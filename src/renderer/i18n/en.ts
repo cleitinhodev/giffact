@@ -433,6 +433,22 @@ export const en = {
   'sc.cutApply': 'Apply the cutout',
   'sc.cutCancel': 'Cancel the mask',
   'help.step6': 'Cutout (X): outline an area of the frame to copy its pixels to a transparent layer — export it with “Cutouts only” to extract PNGs from the GIF.',
+  // recorte → subtrair
+  'opt.cut.subtract': 'Subtract',
+  'opt.cut.subtract.tip': 'Remove inner parts of this cutout with red areas (S)',
+  'opt.cut.sub.status': 'Subtracting from “{name}”: {n} red area(s) waiting. Draw more or click Remove.',
+  'opt.cut.sub.drawing': 'Drawing a red area: {n} point(s). Close it with Enter, double-click or the 1st point; Esc discards it.',
+  'opt.cut.sub.hint': 'Click points around each part to take out (like Curve), e.g. the gap between an arm and the body. You can draw several red areas and drag their points, then click Remove. Repeat as often as you like; Ctrl+Z undoes each removal. Delete erases the selected red area.',
+  'opt.cut.sub.remove': 'Remove',
+  'opt.cut.sub.done': 'Done',
+  'opt.cut.sub.frames.layer': 'Same frames as this cutout',
+  'toast.subDone': '{n} area(s) removed in {f} frame(s)',
+  'toast.subNoLayer': 'There is no “{name}” cutout layer in this frame.',
+  'toast.subNeedCut': 'Select a cutout layer (✂) first to subtract from it.',
+  'sc.cutSubtract': 'Subtract from the selected cutout',
+  'sc.cutRemove': 'Remove the red areas',
+  'sc.cutDelArea': 'Delete the selected red area',
+  'help.step7': 'Subtract (S): with a cutout layer selected, draw small red areas over parts you don’t want (like gaps inside the cutout) and click Remove. You can repeat it as many times as you like.',
 };
 export type Dict = typeof en;
 export type Key = keyof Dict;

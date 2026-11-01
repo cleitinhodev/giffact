@@ -34,6 +34,8 @@ export interface CutMask {
   pts: CutPt[];
   /** borda difusa em px do documento (0 = borda nítida, antisserrilhada) */
   feather: number;
+  /** áreas removidas com "Subtrair" (1.2.0-beta.2+): ficam transparentes dentro do recorte */
+  holes?: CutPt[][];
 }
 
 export interface Layer {
