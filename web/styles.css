@@ -373,3 +373,5 @@ button.primary.danger { background: #d81b47; border-color: #ff2d55; color: #fff;
 button.primary.danger:hover:not(:disabled) { background: #e8285a; filter: none; }
 .cut-sub-title { display: flex; align-items: center; gap: 6px; font-weight: 600; color: #ff5a78; }
 .cut-sub-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff2d55; box-shadow: 0 0 0 2px rgba(255, 45, 85, 0.25); }
+.field.cut-sub-scope { flex-direction: column; align-items: stretch; gap: 4px; }
+.field.cut-sub-scope select { width: 100%; }

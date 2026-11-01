@@ -228,7 +228,7 @@ function subtractControls(tool: CutoutTool, seg: HTMLElement, btn: (id: string, 
   return [
     h('div', { class: 'cut-sub-title' }, h('span', { class: 'cut-sub-dot' }), t('opt.cut.subtract')),
     seg,
-    h('label', { class: 'field' }, t('opt.cut.frames'), scope),
+    h('label', { class: 'field cut-sub-scope' }, t('opt.cut.frames'), scope),
     h('div', { class: 'hint cut-status' }, status),
     h('div', { class: 'row tight wrap' },
       remove,
