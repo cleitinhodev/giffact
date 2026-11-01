@@ -2,6 +2,7 @@
 import { S } from './state';
 import type { FrameDoc, Layer } from './types';
 import { renderFrameToCanvas } from './render';
+import { cutCanvas } from './cutmask';
 import { getSamples, outlineSvgPath } from './geom';
 import { createExportSink } from './platform';
 import { t } from './i18n';
@@ -15,6 +16,8 @@ export interface ExportOptions {
   includeGif: boolean;
   layerNames: Set<string> | null; // null = todas visíveis
   prefix: string;
+  /** conteúdo: linhas + recortes (padrão), só linhas ou só recortes */
+  content?: 'both' | 'lines' | 'cuts';
 }
 
 export function padFor(count: number) {
@@ -47,7 +50,16 @@ export function frameToSvg(doc: FrameDoc, fi: number, o: { width: number; height
     out.push(`<image width="${W}" height="${H}" xlink:href="${url}" href="${url}"/>`);
   }
   for (const L of doc.layers) {
-    if (!L.visible || !o.layerFilter(L) || !L.strokes.length) continue;
+    if (!L.visible || !o.layerFilter(L)) continue;
+    if (L.cut) {
+      // camada de recorte: imagem PNG transparente embutida
+      const f = S.frames[fi];
+      if (!f || L.opacity <= 0.001) continue;
+      const url = cutCanvas(L.cut, f.canvas, Math.max(1, Math.round(o.width)), Math.max(1, Math.round(o.height))).toDataURL('image/png');
+      out.push(`<image id="${esc(L.name)}" opacity="${L.opacity}" width="${W}" height="${H}" preserveAspectRatio="none" xlink:href="${url}" href="${url}"/>`);
+      continue;
+    }
+    if (!L.strokes.length) continue;
     out.push(`<g id="${esc(L.name)}" opacity="${L.opacity}">`);
     for (const s of L.strokes) {
       const sm = getSamples(s, Math.max(scale, 2));
@@ -63,7 +75,8 @@ export async function runExport(o: ExportOptions, progress: (done: number, total
   const ext = o.format;
   const sink = await createExportSink(`${(o.prefix || 'quadros').replace(/[_\-\s.]+$/, '') || 'quadros'}_${ext}.zip`);
   if (!sink) return null;
-  const filter = (l: Layer) => !o.layerNames || o.layerNames.has(l.name);
+  const content = o.content || 'both';
+  const filter = (l: Layer) => (!o.layerNames || o.layerNames.has(l.name)) && (content === 'both' || (content === 'cuts') === !!l.cut);
   const total = S.frames.length;
   for (let k = 0; k < o.frames.length; k++) {
     if (isCancelled()) throw new Error(t('export.cancelled'));
@@ -75,6 +88,7 @@ export async function runExport(o: ExportOptions, progress: (done: number, total
         background: o.background,
         bgImage: o.includeGif ? S.frames[fi].canvas : null,
         layerFilter: filter,
+        frame: S.frames[fi].canvas,
       });
       data = await canvasToPng(c);
       c.width = c.height = 0; // libera memória

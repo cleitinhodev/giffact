@@ -26,6 +26,8 @@ export interface Tool {
   overlay?(ctx: CanvasRenderingContext2D): void;
   exclude?(): Set<string> | null;
   live?(): { strokes: Stroke[]; opacity: number } | null;
+  /** estado pendente sobrevive à troca de quadro/ferramenta */
+  persistent?: boolean;
 }
 
 let canvas: HTMLCanvasElement;
@@ -227,7 +229,7 @@ function draw() {
     lc.setTransform(1, 0, 0, 1, 0, 0);
     lc.clearRect(0, 0, linesCache.width, linesCache.height);
     lc.setTransform(M);
-    drawFrameLayers(lc, S.docs[S.cur], { scale, exclude: excl || undefined });
+    drawFrameLayers(lc, S.docs[S.cur], { scale, exclude: excl || undefined, frame: S.frames[S.cur]?.canvas, pixelated: S.view.zoom >= 3 });
   }
   g.setTransform(1, 0, 0, 1, 0, 0);
   g.drawImage(linesCache, 0, 0);

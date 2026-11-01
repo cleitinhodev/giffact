@@ -26,6 +26,16 @@ export interface Stroke {
   taperEnd: number;
 }
 
+/** Ponto da máscara de recorte. c = 1 → canto (segmentos retos chegando/saindo). */
+export interface CutPt { x: number; y: number; c?: number }
+
+/** Máscara de recorte: área fechada cujo conteúdo (pixels do quadro do GIF) vira uma camada de imagem. */
+export interface CutMask {
+  pts: CutPt[];
+  /** borda difusa em px do documento (0 = borda nítida, antisserrilhada) */
+  feather: number;
+}
+
 export interface Layer {
   id: string;
   name: string;
@@ -33,6 +43,8 @@ export interface Layer {
   locked: boolean;
   opacity: number;
   strokes: Stroke[];
+  /** presente = camada de recorte (pixels do quadro dentro da máscara; não recebe traços) */
+  cut?: CutMask;
 }
 
 export interface FrameDoc {
@@ -55,9 +67,11 @@ export type ToolId =
   | 'pressure'
   | 'color'
   | 'eraser'
+  | 'cutout'
   | 'hand';
 
 export type EraserMode = 'stroke' | 'intersect' | 'area';
+export type CutScope = 'current' | 'all' | 'range';
 
 export interface Settings {
   width: number;
@@ -82,6 +96,10 @@ export interface Settings {
   scaleWidth: boolean;
   closeCurveSnap: boolean;
   swatches: string[];
+  /** recorte: true = polígono (cantos retos); false = curva suave (Alt+clique faz canto) */
+  cutPoly: boolean;
+  cutFeather: number;
+  cutScope: CutScope;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -106,5 +124,8 @@ export const DEFAULT_SETTINGS: Settings = {
   showPoints: true,
   scaleWidth: true,
   closeCurveSnap: true,
+  cutPoly: false,
+  cutFeather: 0,
+  cutScope: 'current',
   swatches: ['#111111', '#444444', '#ffffff', '#e53935', '#1e88e5', '#43a047', '#fdd835', '#8e24aa'],
 };

@@ -29,7 +29,7 @@ export interface Samples {
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
 /** Catmull-Rom centrípeta entre p1 e p2 */
-function crPoint(p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: number, out: number[]) {
+export function crPoint(p0: Pt, p1: Pt, p2: Pt, p3: Pt, t: number, out: number[]) {
   const alpha = 0.5;
   const d01 = Math.max(Math.pow(Math.hypot(p1.x - p0.x, p1.y - p0.y), alpha), 1e-4);
   const d12 = Math.max(Math.pow(Math.hypot(p2.x - p1.x, p2.y - p1.y), alpha), 1e-4);

@@ -46,6 +46,11 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
   - Você escolhe quais camadas e quadros entram.
 - **Projetos** (`Ctrl+S`): arquivos `.giffact` com o GIF embutido. Projetos antigos `.gifline`/`.json` do GIF Linework continuam abrindo.
 
+## Em teste: 1.2.0-beta.1 (Recorte)
+- Nova ferramenta **Recorte** (`X`): clique para contornar uma área. Os pontos podem ser suaves ou de polígono (`Alt` alterna um ponto). O botão direito volta um ponto. Para fechar, clique no 1º ponto, dê duplo clique ou aperte `Enter`. Depois você pode ajustar os pontos e aplicar.
+- Os pixels do GIF dentro da máscara vão para uma **camada de recorte** (✂), transparente fora da área, com suavização de borda opcional. Funciona no quadro atual, em todos os quadros ou num intervalo.
+- A camada pode ser mostrada ou ocultada, é salva no projeto e sai no PNG/SVG. Na exportação você escolhe **Linhas e recortes**, **Só linhas** ou **Só recortes**, o que permite extrair PNGs transparentes de um GIF.
+
 ## Novidades da 1.1.1
 - Ferramentas Curva e Linha: **o botão direito agora volta ao ponto anterior** e mantém a linha em andamento, em vez de encerrá-la. Para terminar, use `Enter` ou duplo clique.
 

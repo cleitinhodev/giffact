@@ -22,9 +22,10 @@
     "dist:win": "node build.mjs --minify && electron-builder --win zip portable --x64",
     "web": "node build.mjs && npx --yes http-server app -p 8080",
     "test:features": "node test/features.mjs",
+    "test:cutout": "node test/cutout.mjs",
     "test:features:electron": "node test/features.mjs electron",
     "test:i18n": "node test/i18n.mjs",
-    "test:all": "npm run typecheck && npm run build && npm run test:i18n && npm test && npm run test:features && npm run test:layout && npm run test:electron && npm run test:features:electron && npm run test:layout:electron",
+    "test:all": "npm run typecheck && npm run build && npm run test:i18n && npm test && npm run test:features && npm run test:cutout && npm run test:layout && npm run test:electron && npm run test:features:electron && npm run test:layout:electron",
     "dist:linux": "node build.mjs --minify && electron-builder --linux AppImage tar.gz deb --x64",
     "test:linux": "node test/linux-smoke.mjs"
   },

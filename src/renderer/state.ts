@@ -2,6 +2,7 @@
 import type { FrameDoc, GifFrame, Layer, Settings, Stroke, ToolId } from './types';
 import { DEFAULT_SETTINGS } from './types';
 import { cloneStroke, uid } from './geom';
+import { cloneMask } from './cutmask';
 import { t } from './i18n';
 
 type Listener = () => void;
@@ -182,8 +183,8 @@ export function copySelection(): number {
   return sel.length;
 }
 
-function findOrCreateLayer(doc: FrameDoc, name: string, preferIndex: number): Layer {
-  let L = doc.layers.find((l) => l.name === name);
+function findOrCreateLayer(doc: FrameDoc, name: string, preferIndex: number, cut = false): Layer {
+  let L = doc.layers.find((l) => l.name === name && !!l.cut === cut);
   if (!L) {
     L = newLayer(name);
     doc.layers.splice(Math.min(preferIndex, doc.layers.length), 0, L);
@@ -195,6 +196,7 @@ function findOrCreateLayer(doc: FrameDoc, name: string, preferIndex: number): La
 export function pasteToFrames(frames: number[]): number {
   if (!S.clipboard) return 0;
   const srcLayer = activeLayer();
+  if (srcLayer?.cut) return 0;
   let count = 0;
   for (const fi of frames) {
     pushUndo(fi);
@@ -222,7 +224,15 @@ export function copyLayerToFrames(frames: number[], mode: 'replace' | 'merge') {
     if (fi === S.cur) continue;
     pushUndo(fi);
     const doc = S.docs[fi];
-    const L = findOrCreateLayer(doc, src.name, idx);
+    const L = findOrCreateLayer(doc, src.name, idx, !!src.cut);
+    if (src.cut) {
+      // camada de recorte: a mesma máscara aplicada aos pixels do quadro de destino
+      L.cut = cloneMask(src.cut);
+      L.strokes = [];
+      L.opacity = src.opacity;
+      markChanged(fi);
+      continue;
+    }
     const fresh = src.strokes.map((s) => cloneStroke(s, true));
     L.strokes = mode === 'replace' ? fresh : L.strokes.concat(fresh);
     L.opacity = src.opacity;
@@ -233,10 +243,10 @@ export function copyLayerToFrames(frames: number[], mode: 'replace' | 'merge') {
 /** Traz as linhas de outro quadro (mesmo nome de camada) para a camada ativa */
 export function copyFromFrame(srcFi: number, mode: 'replace' | 'merge'): number {
   const L = activeLayer();
-  if (!L || L.locked) return 0;
+  if (!L || L.locked || L.cut) return 0;
   const srcDoc = S.docs[srcFi];
   if (!srcDoc) return 0;
-  const srcL = srcDoc.layers.find((l) => l.name === L.name) || srcDoc.layers[Math.min(S.docs[S.cur].activeLayer, srcDoc.layers.length - 1)];
+  const srcL = srcDoc.layers.find((l) => l.name === L.name && !l.cut) || srcDoc.layers[Math.min(S.docs[S.cur].activeLayer, srcDoc.layers.length - 1)];
   if (!srcL) return 0;
   pushUndo();
   const fresh = srcL.strokes.map((s) => cloneStroke(s, true));
@@ -248,7 +258,7 @@ export function copyFromFrame(srcFi: number, mode: 'replace' | 'merge'): number 
 }
 
 export function frameHasStrokes(fi: number): boolean {
-  return S.docs[fi]?.layers.some((l) => l.strokes.length > 0) ?? false;
+  return S.docs[fi]?.layers.some((l) => l.strokes.length > 0 || !!l.cut) ?? false;
 }
 
 export function allLayerNames(): string[] {

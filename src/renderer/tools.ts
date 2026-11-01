@@ -7,6 +7,7 @@ import {
 } from './geom';
 import { docToScreen, px, requestRender, type PointerInfo, type Tool } from './view';
 import { t } from './i18n';
+import { CutoutTool } from './cutout';
 
 // ---------------- utilidades ----------------
 function editableLayer(silent = false): Layer | null {
@@ -14,6 +15,7 @@ function editableLayer(silent = false): Layer | null {
   if (!L) return null;
   if (L.locked) { if (!silent) toast(t('toast.activeLocked'), 'warn'); return null; }
   if (!L.visible) { if (!silent) toast(t('toast.activeHidden'), 'warn'); return null; }
+  if (L.cut) { if (!silent) toast(t('toast.cutLayer'), 'warn'); return null; }
   return L;
 }
 
@@ -1034,6 +1036,7 @@ export const TOOLS: Record<ToolId, Tool> = {
   pressure: new PressureTool(),
   color: new ColorTool(),
   eraser: new EraserTool(),
+  cutout: new CutoutTool(),
   hand: new HandTool(),
 };
 
@@ -1041,13 +1044,14 @@ let prevTool: ToolId = S.tool;
 export function currentTool(): Tool { return TOOLS[S.tool]; }
 export function onToolChanged() {
   if (prevTool !== S.tool) {
-    TOOLS[prevTool].deactivate?.();
-    TOOLS[prevTool].cancel?.();
+    const pt = TOOLS[prevTool];
+    if (!pt.persistent) { pt.deactivate?.(); pt.cancel?.(); }
     prevTool = S.tool;
   }
 }
 hooks.beforeFrame.push(() => {
   const t = TOOLS[S.tool];
+  if (t.persistent) { t.up?.({} as PointerInfo); return; } // recorte: máscara pendente continua (pode ser vista sobre outro quadro)
   t.deactivate?.();
   t.cancel?.();
 });

@@ -46,6 +46,11 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
   - Choose which layers and frames to include.
 - **Projects** (`Ctrl+S`): `.giffact` files with the GIF embedded. Older `.gifline`/`.json` projects from GIF Linework still open.
 
+## In testing: 1.2.0-beta.1 (Cutout)
+- New **Cutout** tool (`X`): click to outline an area. Points can be smooth or polygon corners (`Alt` toggles a point). Right-click goes back one point. Close it by clicking the 1st point, double-clicking or pressing `Enter`. You can then adjust the points and apply.
+- The GIF pixels inside the mask go to a **cutout layer** (✂) that is transparent outside the area, with optional edge feathering. It works on the current frame, all frames or a range.
+- The layer can be shown or hidden, is saved in the project and is included in PNG/SVG export. When exporting, choose **Lines and cutouts**, **Lines only** or **Cutouts only**, which lets you extract transparent PNGs from a GIF.
+
 ## What's new in 1.1.1
 - Curve and Line tools: **right-click now goes back to the previous point** and keeps the line in progress instead of finishing it. Finish with `Enter` or a double-click.
 

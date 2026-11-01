@@ -1,6 +1,7 @@
 // Renderização de traços/camadas (compartilhada por tela, miniaturas, exportação e prévia)
 import type { FrameDoc, Layer, Stroke } from './types';
 import { getPath } from './geom';
+import { cutCanvas } from './cutmask';
 
 export function drawStroke(ctx: CanvasRenderingContext2D, s: Stroke, scale: number, color?: string) {
   ctx.fillStyle = color || s.color;
@@ -27,6 +28,13 @@ export interface LayerRenderOpts {
   /** cor única (para onion skin) */
   tint?: string;
   ignoreOpacity?: boolean;
+  /** quadro do GIF de onde as camadas de recorte tiram seus pixels (sem ele, recortes não são desenhados) */
+  frame?: HTMLCanvasElement | null;
+  /** resolução (px) em que o recorte é gerado; padrão = tamanho do quadro */
+  cutW?: number;
+  cutH?: number;
+  /** desenha os pixels do recorte sem suavização (zoom alto no editor) */
+  pixelated?: boolean;
 }
 
 /**
@@ -38,9 +46,23 @@ export function drawFrameLayers(ctx: CanvasRenderingContext2D, doc: FrameDoc, o:
   doc.layers.forEach((L, idx) => {
     if (!L.visible) return;
     if (o.layerFilter && !o.layerFilter(L, idx)) return;
+    const op = o.ignoreOpacity ? 1 : L.opacity;
+    if (L.cut) {
+      // camada de recorte: pixels do quadro dentro da máscara (onion skin e miniaturas sem quadro ignoram)
+      if (o.tint || !o.frame || op <= 0.001 || o.exclude?.has(L.id)) return;
+      const f = o.frame;
+      const img = cutCanvas(L.cut, f, o.cutW ?? f.width, o.cutH ?? f.height);
+      ctx.save();
+      ctx.globalAlpha *= Math.min(1, op);
+      ctx.imageSmoothingEnabled = !o.pixelated;
+      ctx.imageSmoothingQuality = 'high';
+      // canvas do quadro tem docW×docH px → em coordenadas do documento ocupa (0,0)-(f.width,f.height)
+      ctx.drawImage(img, 0, 0, f.width, f.height);
+      ctx.restore();
+      return;
+    }
     const strokes = o.exclude ? L.strokes.filter((s) => !o.exclude!.has(s.id)) : L.strokes;
     if (!strokes.length) return;
-    const op = o.ignoreOpacity ? 1 : L.opacity;
     if (op >= 0.999) {
       for (const s of strokes) drawStroke(ctx, s, o.scale, o.tint);
     } else if (op > 0.001) {
@@ -63,6 +85,8 @@ export function renderFrameToCanvas(doc: FrameDoc, docW: number, docH: number, W
   bgImage?: HTMLCanvasElement | null;
   bgOpacity?: number;
   layerFilter?: (l: Layer, i: number) => boolean;
+  /** quadro do GIF para as camadas de recorte */
+  frame?: HTMLCanvasElement | null;
 }): HTMLCanvasElement {
   const c = document.createElement('canvas');
   c.width = W; c.height = H;
@@ -78,6 +102,6 @@ export function renderFrameToCanvas(doc: FrameDoc, docW: number, docH: number, W
   }
   const sx = W / docW, sy = H / docH;
   ctx.setTransform(sx, 0, 0, sy, 0, 0);
-  drawFrameLayers(ctx, doc, { scale: Math.max(sx, sy), layerFilter: opts.layerFilter });
+  drawFrameLayers(ctx, doc, { scale: Math.max(sx, sy), layerFilter: opts.layerFilter, frame: opts.frame, cutW: W, cutH: H });
   return c;
 }

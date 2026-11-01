@@ -3,6 +3,7 @@ import { S, setupDocument, emit } from './state';
 import type { FrameDoc } from './types';
 import { decodeGif, decodeImage, isGif, type DecodedGif } from './gif';
 import { t } from './i18n';
+import { cloneMask, isValidMask } from './cutmask';
 
 /** Identificadores aceitos no campo `app` (o antigo vem da época “GIF Linework”). */
 export const PROJECT_APP_IDS = ['giffact', 'gif-linework'];
@@ -69,6 +70,11 @@ export async function loadProjectBytes(bytes: Uint8Array): Promise<void> {
       L.strokes = (L.strokes || []).filter((s) => s && Array.isArray(s.pts) && s.pts.length).map((s) => ({
         ...s, taperStart: s.taperStart ?? 0, taperEnd: s.taperEnd ?? 0, closed: !!s.closed, kind: s.kind === 'line' ? 'line' : 'curve',
       }));
+      // camada de recorte (1.2+): máscara válida ou vira camada comum
+      if (L.cut !== undefined) {
+        if (isValidMask(L.cut)) { L.cut = cloneMask({ pts: L.cut.pts, feather: Number.isFinite(+L.cut.feather) ? Math.max(0, +L.cut.feather) : 0 }); L.strokes = []; }
+        else delete L.cut;
+      }
     }
   }
   S.sourceBytes = src;

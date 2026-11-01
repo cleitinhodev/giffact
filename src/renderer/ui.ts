@@ -6,6 +6,8 @@ import { TOOLS, deleteSelection, flipSelection, updateSelected } from './tools';
 import { fitCurve, getSamples, uid } from './geom';
 import { fitView, setRotation, setZoom, lastPointer, updateCursor } from './view';
 import { askText } from './dialogs';
+import type { CutoutTool } from './cutout';
+import { cloneMask } from './cutmask';
 import { t, onLangChange, type Key } from './i18n';
 
 export const TOOL_DEFS: { id: ToolId; key: string; icon: string }[] = [
@@ -18,6 +20,7 @@ export const TOOL_DEFS: { id: ToolId; key: string; icon: string }[] = [
   { id: 'pressure', key: 'U', icon: '<path d="M3 17c5-11 13-11 18-5"/><circle cx="8.5" cy="10" r="2.6" fill="currentColor"/><circle cx="18" cy="9.5" r="1.2" fill="currentColor"/>' },
   { id: 'color', key: 'K', icon: '<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>' },
   { id: 'eraser', key: 'E', icon: '<path d="M3 16.5l8-8 6 6-4 4H6.5z"/><path d="M11 8.5l3.5-3.5 6 6-3.5 3.5"/><path d="M3 21h18"/>' },
+  { id: 'cutout', key: 'X', icon: '<path d="M5.2 12.6C3.8 11.6 3 10.4 3 9c0-3 4-5.5 9-5.5S21 6 21 9s-4 5.5-9 5.5c-1.3 0-2.6-.2-3.7-.5" stroke-dasharray="3 2.2"/><circle cx="7" cy="15.6" r="1.7"/><path d="M6.4 17.2c-.6 1.6.2 2.8 1.9 3.3"/>' },
   { id: 'hand', key: 'H', icon: '<path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V5.5a1.5 1.5 0 0 1 3 0V14c0 4-3 7-6.5 7-2.5 0-4.5-1.5-5.5-3.5l-2-4a1.5 1.5 0 0 1 2.6-1.5L8 14"/>' },
 ];
 
@@ -147,8 +150,58 @@ export function refreshToolOptions() {
     case 'select':
       box.append(check(t('opt.scaleWidth'), 'scaleWidth'));
       break;
+    case 'cutout':
+      box.append(...cutoutControls());
+      break;
   }
   box.append(hint(toolHint(def.id)));
+}
+
+function cutoutControls(): HTMLElement[] {
+  const st = S.settings;
+  const tool = TOOLS.cutout as CutoutTool;
+  const seg = h('div', { class: 'seg', title: t('opt.cut.mode') });
+  const modes: [boolean, string][] = [[false, t('opt.cut.smooth')], [true, t('opt.cut.poly')]];
+  for (const [poly, lbl] of modes) {
+    const b = h('button', { class: st.cutPoly === poly ? 'on' : '', 'data-cutmode': poly ? 'poly' : 'smooth' }, lbl);
+    b.onclick = () => { st.cutPoly = poly; settingsChanged(); refreshToolOptions(); };
+    seg.append(b);
+  }
+  const feather = slider(t('opt.cut.feather'), 'cutFeather', 0, 20, 0.5, (v) => v + ' px');
+  const scope = h('select', { id: 'cutScope' },
+    h('option', { value: 'current' }, t('opt.cut.frames.current')),
+    h('option', { value: 'all' }, t('opt.cut.frames.all')),
+    h('option', { value: 'range' }, t('opt.cut.frames.range'))) as HTMLSelectElement;
+  scope.value = st.cutScope;
+  const n = Math.max(1, S.frames.length);
+  tool.rangeTo = Math.min(Math.max(1, tool.rangeTo || n), n);
+  tool.rangeFrom = Math.min(Math.max(1, tool.rangeFrom || 1), n);
+  const from = h('input', { type: 'number', class: 'num', id: 'cutFrom', min: '1', max: String(n), value: String(tool.rangeFrom) }) as HTMLInputElement;
+  const to = h('input', { type: 'number', class: 'num', id: 'cutTo', min: '1', max: String(n), value: String(tool.rangeTo) }) as HTMLInputElement;
+  const range = h('label', { class: 'field' }, t('export.from'), from, t('export.to'), to);
+  range.style.display = st.cutScope === 'range' ? '' : 'none';
+  from.onchange = () => { tool.rangeFrom = Math.round(+from.value || 1); };
+  to.onchange = () => { tool.rangeTo = Math.round(+to.value || n); };
+  scope.onchange = () => { st.cutScope = scope.value as Settings['cutScope']; range.style.display = st.cutScope === 'range' ? '' : 'none'; settingsChanged(); };
+  const btn = (id: string, label: string, enabled: boolean, fn: () => void, primary = false) => {
+    const b = h('button', { id, class: primary ? 'primary' : '' }, label) as HTMLButtonElement;
+    b.disabled = !enabled; b.onclick = fn; return b;
+  };
+  const L = activeLayer();
+  const status = tool.mode === 'draw' ? t('opt.cut.pending.draw', { n: tool.pts.length }) : tool.mode === 'edit' ? t('opt.cut.pending.edit') : '';
+  const out: HTMLElement[] = [
+    seg,
+    feather,
+    h('label', { class: 'field' }, t('opt.cut.frames'), scope),
+    range,
+  ];
+  if (status) out.push(h('div', { class: 'hint cut-status' }, status));
+  out.push(h('div', { class: 'row tight wrap' },
+    btn('cutApply', t('opt.cut.apply'), tool.mode === 'edit' || (tool.mode === 'draw' && tool.pts.length >= 3), () => tool.apply(), true),
+    btn('cutCancel', t('opt.cut.cancel'), tool.pending, () => tool.cancel()),
+    btn('cutEditMask', t('opt.cut.editMask'), !tool.pending && !!L?.cut, () => tool.editActive()),
+  ));
+  return out;
 }
 
 // ---------------- traços selecionados ----------------
@@ -222,7 +275,8 @@ export function refreshLayers() {
     const lock = h('button', { class: L.locked ? '' : 'off', title: L.locked ? t('layer.unlock') : t('layer.lock') }, L.locked ? '🔒' : '🔓');
     lock.onclick = (e: MouseEvent) => { e.stopPropagation(); L.locked = !L.locked; S.dirty = true; refreshLayers(); emit('layers'); };
     const nm = h('span', { class: 'nm', title: t('layer.rename.title') }, L.name);
-    const li = h('li', { class: i === doc.activeLayer ? 'active' : '', draggable: 'true' }, eye, lock, nm, h('span', { class: 'cnt', title: t('layer.strokes.title') }, String(L.strokes.length)));
+    const cnt = L.cut ? h('span', { class: 'cnt cut', title: t('layer.cut.title') }, '✂') : h('span', { class: 'cnt', title: t('layer.strokes.title') }, String(L.strokes.length));
+    const li = h('li', { class: (i === doc.activeLayer ? 'active' : '') + (L.cut ? ' cutlayer' : ''), draggable: 'true' }, eye, lock, nm, cnt);
     li.onclick = () => { if (doc.activeLayer !== i) { doc.activeLayer = i; S.selection.clear(); emit('layers', 'selection'); } };
     li.ondblclick = async () => {
       const name = await askText(t('layer.rename'), L.name);
@@ -289,6 +343,7 @@ export function bindLayerButtons() {
     const src = doc.layers[doc.activeLayer];
     pushUndo();
     const L = { ...src, id: uid(), name: src.name + ' ' + t('layer.copySuffix'), strokes: src.strokes.map((s) => ({ ...s, id: uid() })) };
+    if (src.cut) L.cut = cloneMask(src.cut);
     doc.layers.splice(doc.activeLayer + 1, 0, L);
     doc.activeLayer++;
     markChanged();
@@ -422,8 +477,9 @@ export function initPanels() {
   });
   on('selection', refreshStrokeProps);
   on('doc', () => { refreshStrokeProps(); refreshLayerCounts(); });
-  on('layers', refreshLayers);
-  on('frame', () => { refreshLayers(); refreshStatus(); refreshStrokeProps(); });
+  on('layers', () => { refreshLayers(); if (S.tool === 'cutout') refreshToolOptions(); });
+  on('cutstate', () => { if (S.tool === 'cutout') refreshToolOptions(); });
+  on('frame', () => { refreshLayers(); refreshStatus(); refreshStrokeProps(); if (S.tool === 'cutout') refreshToolOptions(); });
   on('view', refreshStatus);
   on('pointer', refreshPointerStatus);
   on('loaded', () => { refreshLayers(); refreshStatus(); refreshStrokeProps(); });
@@ -440,5 +496,5 @@ function refreshLayerCounts() {
   const items = $('layerList').querySelectorAll('li .cnt');
   const n = doc.layers.length;
   if (items.length !== n) { refreshLayers(); return; }
-  items.forEach((el, k) => { el.textContent = String(doc.layers[n - 1 - k].strokes.length); });
+  items.forEach((el, k) => { const L = doc.layers[n - 1 - k]; el.textContent = L.cut ? '✂' : String(L.strokes.length); });
 }

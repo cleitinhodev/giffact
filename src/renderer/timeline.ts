@@ -207,7 +207,7 @@ function renderThumb(i: number, s: Slot) {
   if (lines && has) {
     const sx = c.width / S.docW;
     g.setTransform(sx, 0, 0, c.height / S.docH, 0, 0);
-    drawFrameLayers(g, S.docs[i], { scale: sx });
+    drawFrameLayers(g, S.docs[i], { scale: sx, frame: S.frames[i].canvas });
   }
   if (s.holder.firstChild !== c) s.holder.replaceChildren(c);
   s.el.classList.toggle('has', has);
