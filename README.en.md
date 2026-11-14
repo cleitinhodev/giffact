@@ -64,6 +64,11 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
 - **Help** (how-to and keyboard shortcuts) and **About** dialogs.
 
 ## Screenshots
+<p align="center">
+  <img src="docs/screenshots/lines-example.png" alt="Lineart hand-traced in Giffact" width="720" />
+  <br /><sub><b>Hand-traced in Giffact</b>: just the lines, ready to export (1152×1152)</sub>
+</p>
+
 <table>
   <tr>
     <td align="center" width="50%"><img src="docs/screenshots/onion-skin.png" alt="Onion skin" /><br /><sub><b>Onion skin</b>: previous frame in red, next in blue</sub></td>
@@ -71,18 +76,17 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
   </tr>
   <tr>
     <td align="center" width="50%"><img src="docs/screenshots/export.png" alt="Export dialog" /><br /><sub><b>Export</b> PNG/SVG at any scale</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Lineart hand-traced in Giffact" /><br /><sub>The result: lineart hand-traced in Giffact, lines only (1152×1152)</sub></td>
-  </tr>
-  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/preview.png" alt="Animated preview" /><br /><sub><b>Animated preview</b> of the traced frames</sub></td>
+  </tr>
+  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/light.png" alt="Light theme" /><br /><sub><b>Light theme</b></sub></td>
-  </tr>
-  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/project-menu.png" alt="Project menu" /><br /><sub><b>Project</b> menu</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/about.png" alt="About dialog" /><br /><sub><b>About</b></sub></td>
   </tr>
   <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/about.png" alt="About dialog" /><br /><sub><b>About</b></sub></td>
     <td align="center" width="50%"><img src="docs/screenshots/japanese.png" alt="Japanese interface" /><br /><sub>10 languages (here: 日本語)</sub></td>
+  </tr>
+  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/pt-BR.png" alt="Portuguese interface, light theme" /><br /><sub>Português (Brasil), light theme</sub></td>
   </tr>
 </table>

@@ -64,6 +64,11 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
 - Janelas de **Ajuda** (passo a passo e atalhos) e **Sobre**.
 
 ## Capturas de tela
+<p align="center">
+  <img src="docs/screenshots/lines-example.png" alt="Lineart feito à mão no Giffact" width="720" />
+  <br /><sub><b>Feito à mão no Giffact</b>: só as linhas, prontas para exportar (1152×1152)</sub>
+</p>
+
 <table>
   <tr>
     <td align="center" width="50%"><img src="docs/screenshots/dark-neon.png" alt="Tema escuro com neon" /><br /><sub><b>Tema escuro</b> com neon</sub></td>
@@ -74,15 +79,14 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
     <td align="center" width="50%"><img src="docs/screenshots/export.png" alt="Janela de exportação" /><br /><sub><b>Exportar</b> PNG/SVG em qualquer escala</sub></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Lineart feito à mão no Giffact" /><br /><sub>O resultado: lineart feito à mão no Giffact, só as linhas (1152×1152)</sub></td>
     <td align="center" width="50%"><img src="docs/screenshots/preview.png" alt="Prévia animada" /><br /><sub><b>Prévia animada</b> dos quadros traçados</sub></td>
-  </tr>
-  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/project-menu.png" alt="Menu Projeto" /><br /><sub>Menu <b>Projeto</b></sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/about.png" alt="Janela Sobre" /><br /><sub>Janela <b>Sobre</b></sub></td>
   </tr>
   <tr>
+    <td align="center" width="50%"><img src="docs/screenshots/about.png" alt="Janela Sobre" /><br /><sub>Janela <b>Sobre</b></sub></td>
     <td align="center" width="50%"><img src="docs/screenshots/japanese.png" alt="Interface em japonês" /><br /><sub>10 idiomas (aqui: 日本語)</sub></td>
+  </tr>
+  <tr>
     <td align="center" width="50%"><img src="docs/screenshots/light.png" alt="Tema claro em inglês" /><br /><sub><b>Tema claro</b> (em inglês)</sub></td>
   </tr>
 </table>
