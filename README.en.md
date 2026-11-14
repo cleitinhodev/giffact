@@ -71,7 +71,7 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
   </tr>
   <tr>
     <td align="center" width="50%"><img src="docs/screenshots/export.png" alt="Export dialog" /><br /><sub><b>Export</b> PNG/SVG at any scale</sub></td>
-    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Exported lines at 2x" /><br /><sub>The result: only the lines, exported at 2× (960×960)</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Lineart hand-traced in Giffact" /><br /><sub>The result: lineart hand-traced in Giffact, lines only (1152×1152)</sub></td>
   </tr>
   <tr>
     <td align="center" width="50%"><img src="docs/screenshots/preview.png" alt="Animated preview" /><br /><sub><b>Animated preview</b> of the traced frames</sub></td>

@@ -74,7 +74,7 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
     <td align="center" width="50%"><img src="docs/screenshots/export.png" alt="Janela de exportação" /><br /><sub><b>Exportar</b> PNG/SVG em qualquer escala</sub></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Linhas exportadas em 2x" /><br /><sub>O resultado: só as linhas, exportadas em 2× (960×960)</sub></td>
+    <td align="center" width="50%"><img src="docs/screenshots/lines-example.png" alt="Lineart feito à mão no Giffact" /><br /><sub>O resultado: lineart feito à mão no Giffact, só as linhas (1152×1152)</sub></td>
     <td align="center" width="50%"><img src="docs/screenshots/preview.png" alt="Prévia animada" /><br /><sub><b>Prévia animada</b> dos quadros traçados</sub></td>
   </tr>
   <tr>
