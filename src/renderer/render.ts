@@ -2,6 +2,8 @@
 import type { FrameDoc, Layer, Stroke } from './types';
 import { getPath } from './geom';
 import { cutCanvas } from './cutmask';
+import { SEAM, shapePath } from './vector';
+import type { VecData } from './types';
 
 export function drawStroke(ctx: CanvasRenderingContext2D, s: Stroke, scale: number, color?: string) {
   ctx.fillStyle = color || s.color;
@@ -18,6 +20,21 @@ function getTmp(w: number, h: number): CanvasRenderingContext2D {
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.clearRect(0, 0, w, h);
   return c;
+}
+
+/** formas vetoriais (Seletor de cores): preenchimento + contorno fino da mesma cor (esconde frestas) */
+export function drawVec(ctx: CanvasRenderingContext2D, v: VecData, exclude?: Set<string>) {
+  ctx.save();
+  ctx.lineJoin = 'round';
+  ctx.lineWidth = SEAM;
+  for (const s of v.shapes) {
+    if (exclude?.has(s.id)) continue;
+    const p = shapePath(s);
+    ctx.fillStyle = s.color; ctx.strokeStyle = s.color;
+    ctx.fill(p, 'evenodd');
+    ctx.stroke(p);
+  }
+  ctx.restore();
 }
 
 export interface LayerRenderOpts {
@@ -58,6 +75,20 @@ export function drawFrameLayers(ctx: CanvasRenderingContext2D, doc: FrameDoc, o:
       ctx.imageSmoothingQuality = 'high';
       // canvas do quadro tem docW×docH px → em coordenadas do documento ocupa (0,0)-(f.width,f.height)
       ctx.drawImage(img, 0, 0, f.width, f.height);
+      ctx.restore();
+      return;
+    }
+    if (L.vec) {
+      // camada de formas vetoriais (onion skin ignora: preenchimentos cobririam as linhas)
+      if (o.tint || op <= 0.001 || o.exclude?.has(L.id) || !L.vec.shapes.length) return;
+      if (op >= 0.999) { drawVec(ctx, L.vec, o.exclude); return; }
+      const t = getTmp(ctx.canvas.width, ctx.canvas.height);
+      t.setTransform(T);
+      drawVec(t, L.vec, o.exclude);
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha *= op;
+      ctx.drawImage(t.canvas, 0, 0);
       ctx.restore();
       return;
     }

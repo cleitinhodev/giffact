@@ -7,6 +7,8 @@ import { fitCurve, getSamples, uid } from './geom';
 import { fitView, setRotation, setZoom, lastPointer, updateCursor } from './view';
 import { askText } from './dialogs';
 import type { CutoutTool } from './cutout';
+import type { ColorSelectTool } from './colorsel';
+import { cloneVec, toHex } from './vector';
 import { cloneMask } from './cutmask';
 import { t, onLangChange, type Key } from './i18n';
 
@@ -21,6 +23,7 @@ export const TOOL_DEFS: { id: ToolId; key: string; icon: string }[] = [
   { id: 'color', key: 'K', icon: '<path d="M12 3c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z"/>' },
   { id: 'eraser', key: 'E', icon: '<path d="M3 16.5l8-8 6 6-4 4H6.5z"/><path d="M11 8.5l3.5-3.5 6 6-3.5 3.5"/><path d="M3 21h18"/>' },
   { id: 'cutout', key: 'X', icon: '<path d="M5.2 12.6C3.8 11.6 3 10.4 3 9c0-3 4-5.5 9-5.5S21 6 21 9s-4 5.5-9 5.5c-1.3 0-2.6-.2-3.7-.5" stroke-dasharray="3 2.2"/><circle cx="7" cy="15.6" r="1.7"/><path d="M6.4 17.2c-.6 1.6.2 2.8 1.9 3.3"/>' },
+  { id: 'colors', key: 'I', icon: '<path d="M16.6 3.6a2.2 2.2 0 0 1 3.1 3.1l-2.3 2.3-3.1-3.1z"/><path d="M13.4 6.8l3.8 3.8"/><path d="M15.3 8.7l-8 8-2.8.9.9-2.8 8-8"/><circle cx="5.5" cy="5.5" r="2.2" fill="currentColor" stroke="none"/><circle cx="11" cy="3.6" r="1.4" fill="currentColor" stroke="none"/>' },
   { id: 'hand', key: 'H', icon: '<path d="M8 12V5.5a1.5 1.5 0 0 1 3 0V11M11 11V4a1.5 1.5 0 0 1 3 0v7M14 11V5.5a1.5 1.5 0 0 1 3 0V14c0 4-3 7-6.5 7-2.5 0-4.5-1.5-5.5-3.5l-2-4a1.5 1.5 0 0 1 2.6-1.5L8 14"/>' },
 ];
 
@@ -153,6 +156,9 @@ export function refreshToolOptions() {
     case 'cutout':
       box.append(...cutoutControls());
       break;
+    case 'colors':
+      box.append(...colorSelControls());
+      return;
   }
   if (!(def.id === 'cutout' && (TOOLS.cutout as CutoutTool).mode === 'sub')) box.append(hint(toolHint(def.id)));
 }
@@ -209,6 +215,122 @@ function cutoutControls(): HTMLElement[] {
     sub.title = t('opt.cut.subtract.tip');
     out.push(h('div', { class: 'row tight wrap' }, sub));
   }
+  return out;
+}
+
+// ---------------- Seletor de cores ----------------
+function colorSelControls(): HTMLElement[] {
+  const st = S.settings;
+  const tool = TOOLS.colors as ColorSelectTool;
+  const btn = (id: string, label: string, enabled: boolean, fn: () => void, cls = '') => {
+    const b = h('button', { id, class: cls }, label) as HTMLButtonElement;
+    b.disabled = !enabled || tool.busy; b.onclick = fn; return b;
+  };
+  const vslider = (id: string, label: string, key: 'vecColors' | 'vecTol' | 'vecSpeck' | 'vecSmooth' | 'vecLineMax', min: number, max: number, fmt: (v: number) => string, onChange?: () => void) => {
+    const out = h('span', {}, fmt(st[key]));
+    const r = h('input', { type: 'range', id, min: String(min), max: String(max), step: '1', value: String(st[key]) }) as HTMLInputElement;
+    r.oninput = () => { st[key] = +r.value; out.textContent = fmt(st[key]); saveSettings(); onChange?.(); };
+    return h('label', { class: 'field' }, label, r, out);
+  };
+  const out: HTMLElement[] = [];
+  if (tool.busy) {
+    out.push(h('div', { class: 'hint cut-status', id: 'vecStatus' }, t('opt.vec.busy', { k: tool.progress.done, n: tool.progress.total })));
+    return out;
+  }
+  const mode = tool.mode;
+  if (mode === 'palette') {
+    const ss = tool.session!;
+    const lb = tool.labels();
+    const total = lb ? lb.counts.reduce((a, b) => a + b, 0) || 1 : 1;
+    out.push(h('div', { class: 'hint cut-status', id: 'vecStatus' }, t('opt.vec.status', { f: S.cur + 1, n: ss.palette.length, d: ss.deleted.size })));
+    out.push(vslider('vecColors', t('opt.vec.colors'), 'vecColors', 2, 32, (v) => String(v), () => tool.paramsChanged(true)));
+    // paleta: clique seleciona (Shift = várias), × exclui/restaura
+    const pal = h('div', { class: 'vec-palette', id: 'vecPalette' });
+    ss.palette.forEach((c, i) => {
+      const pct = lb ? Math.round((lb.counts[i] / total) * 1000) / 10 : 0;
+      const del = ss.deleted.has(i);
+      const chip = h('div', {
+        class: 'vsw' + (del ? ' del' : '') + (ss.selected.has(i) ? ' sel' : ''), 'data-i': String(i),
+        style: `--c:${toHex(c)}`, title: t('opt.vec.swatch', { c: toHex(c), p: pct }),
+      });
+      const x = h('button', { class: 'vsw-x', title: del ? t('opt.vec.restoreColor') : t('opt.vec.deleteColor') }, del ? '↺' : '×');
+      x.onclick = (e: MouseEvent) => { e.stopPropagation(); tool.toggleDeleted(i); };
+      chip.onclick = (e: MouseEvent) => tool.pickIndex(i, e.shiftKey);
+      chip.oncontextmenu = (e: MouseEvent) => { e.preventDefault(); tool.toggleDeleted(i); };
+      chip.append(x);
+      pal.append(chip);
+    });
+    out.push(pal);
+    out.push(h('div', { class: 'row tight wrap' },
+      btn('vecDelete', t('opt.vec.delete'), ss.selected.size > 0, () => tool.deleteSelected(), 'danger'),
+      btn('vecKeep', t('opt.vec.keep'), ss.selected.size > 0, () => tool.keepOnlySelected()),
+    ));
+    out.push(h('div', { class: 'row tight wrap' },
+      btn('vecRestore', t('opt.vec.restore'), ss.deleted.size > 0, () => tool.restoreAll()),
+      btn('vecUndo', t('opt.vec.undo'), ss.hist.length > 0, () => tool.undoPalette()),
+    ));
+    out.push(vslider('vecTol', t('opt.vec.tol'), 'vecTol', 0, 100, (v) => String(v)));
+    out.push(vslider('vecSpeck', t('opt.vec.speck'), 'vecSpeck', 1, 80, (v) => v + ' px', () => tool.paramsChanged()));
+    out.push(vslider('vecSmooth', t('opt.vec.smooth'), 'vecSmooth', 0, 4, (v) => String(v), () => tool.paramsChanged()));
+    const scope = h('select', { id: 'vecScope' },
+      h('option', { value: 'current' }, t('opt.cut.frames.current')),
+      h('option', { value: 'all' }, t('opt.cut.frames.all')),
+      h('option', { value: 'range' }, t('opt.cut.frames.range'))) as HTMLSelectElement;
+    scope.value = st.vecScope;
+    const n = Math.max(1, S.frames.length);
+    tool.rangeTo = Math.min(Math.max(1, tool.rangeTo || n), n);
+    tool.rangeFrom = Math.min(Math.max(1, tool.rangeFrom || 1), n);
+    const from = h('input', { type: 'number', class: 'num', id: 'vecFrom', min: '1', max: String(n), value: String(tool.rangeFrom) }) as HTMLInputElement;
+    const to = h('input', { type: 'number', class: 'num', id: 'vecTo', min: '1', max: String(n), value: String(tool.rangeTo) }) as HTMLInputElement;
+    const range = h('label', { class: 'field' }, t('export.from'), from, t('export.to'), to);
+    range.style.display = st.vecScope === 'range' ? '' : 'none';
+    from.onchange = () => { tool.rangeFrom = Math.round(+from.value || 1); };
+    to.onchange = () => { tool.rangeTo = Math.round(+to.value || n); };
+    scope.onchange = () => { st.vecScope = scope.value as Settings['vecScope']; range.style.display = st.vecScope === 'range' ? '' : 'none'; saveSettings(); };
+    out.push(h('label', { class: 'field' }, t('opt.cut.frames'), scope), range);
+    out.push(h('div', { class: 'row tight wrap' },
+      btn('vecGenerate', t('opt.vec.generate'), ss.deleted.size < ss.palette.length, () => { void tool.generate(); }, 'primary'),
+      btn('vecCancel', t('opt.cut.cancel'), true, () => tool.cancel()),
+    ));
+    out.push(hint(t('opt.vec.hint.palette')));
+    return out;
+  }
+  if (mode === 'shapes') {
+    const L = activeLayer()!;
+    const sel = tool.selectedShapes();
+    out.push(h('div', { class: 'hint cut-status', id: 'vecStatus' }, t('opt.vec.shapes', { name: L.name, n: L.vec!.shapes.length, s: sel.length })));
+    const fill = h('input', { type: 'color', id: 'vecFill', value: sel[0]?.color || '#000000' }) as HTMLInputElement;
+    fill.disabled = !sel.length;
+    fill.onchange = () => tool.setFill(fill.value);
+    out.push(h('label', { class: 'field' }, t('opt.vec.fill'), fill));
+    out.push(h('div', { class: 'row tight wrap' },
+      btn('vecSameColor', t('opt.vec.sameColor'), sel.length > 0, () => tool.selectSameColor()),
+      btn('vecDelShape', t('opt.vec.delShape'), sel.length > 0 && !L.locked, () => tool.deleteShapes(), 'danger'),
+    ));
+    // traço → linhas do Giffact
+    out.push(h('div', { class: 'cut-sub-title vec-title' }, t('opt.vec.lines')));
+    const lscope = h('select', { id: 'vecLinesScope' },
+      h('option', { value: 'current' }, t('opt.cut.frames.current')),
+      h('option', { value: 'layer' }, t('opt.vec.lines.layer'))) as HTMLSelectElement;
+    lscope.value = st.vecLinesScope;
+    lscope.onchange = () => { st.vecLinesScope = lscope.value === 'layer' ? 'layer' : 'current'; saveSettings(); };
+    const rm = h('input', { type: 'checkbox', id: 'vecLinesRemove' }) as HTMLInputElement;
+    rm.checked = st.vecLinesRemove;
+    rm.onchange = () => { st.vecLinesRemove = rm.checked; saveSettings(); };
+    const cols = tool.lineColors();
+    out.push(h('div', { class: 'hint' }, t('opt.vec.lines.what', { c: cols.join(', ') || '—' })));
+    out.push(vslider('vecLineMax', t('opt.vec.lines.max'), 'vecLineMax', 1, 40, (v) => v + ' px'));
+    out.push(h('label', { class: 'field' }, t('opt.cut.frames'), lscope));
+    out.push(h('label', { class: 'chk' }, rm, t('opt.vec.lines.remove')));
+    out.push(h('div', { class: 'row tight wrap' },
+      btn('vecToLines', t('opt.vec.lines.go'), cols.length > 0 && !L.locked, () => tool.toLines(), 'primary'),
+    ));
+    out.push(h('div', { class: 'row tight wrap' }, btn('vecNew', t('opt.vec.new'), true, () => tool.analyze())));
+    out.push(hint(t('opt.vec.hint.shapes')));
+    return out;
+  }
+  out.push(h('div', { class: 'row tight wrap' }, btn('vecAnalyze', t('opt.vec.analyze'), S.loaded, () => tool.analyze(), 'primary')));
+  out.push(hint(toolHint('colors')));
   return out;
 }
 
@@ -308,8 +430,10 @@ export function refreshLayers() {
     const lock = h('button', { class: L.locked ? '' : 'off', title: L.locked ? t('layer.unlock') : t('layer.lock') }, L.locked ? '🔒' : '🔓');
     lock.onclick = (e: MouseEvent) => { e.stopPropagation(); L.locked = !L.locked; S.dirty = true; refreshLayers(); emit('layers'); };
     const nm = h('span', { class: 'nm', title: t('layer.rename.title') }, L.name);
-    const cnt = L.cut ? h('span', { class: 'cnt cut', title: t('layer.cut.title') }, '✂') : h('span', { class: 'cnt', title: t('layer.strokes.title') }, String(L.strokes.length));
-    const li = h('li', { class: (i === doc.activeLayer ? 'active' : '') + (L.cut ? ' cutlayer' : ''), draggable: 'true' }, eye, lock, nm, cnt);
+    const cnt = L.cut ? h('span', { class: 'cnt cut', title: t('layer.cut.title') }, '✂')
+      : L.vec ? h('span', { class: 'cnt vec', title: t('layer.vec.title') }, '◆' + L.vec.shapes.length)
+      : h('span', { class: 'cnt', title: t('layer.strokes.title') }, String(L.strokes.length));
+    const li = h('li', { class: (i === doc.activeLayer ? 'active' : '') + (L.cut ? ' cutlayer' : '') + (L.vec ? ' veclayer' : ''), draggable: 'true' }, eye, lock, nm, cnt);
     li.onclick = () => { if (doc.activeLayer !== i) { doc.activeLayer = i; S.selection.clear(); emit('layers', 'selection'); } };
     li.ondblclick = async () => {
       const name = await askText(t('layer.rename'), L.name);
@@ -377,6 +501,7 @@ export function bindLayerButtons() {
     pushUndo();
     const L = { ...src, id: uid(), name: src.name + ' ' + t('layer.copySuffix'), strokes: src.strokes.map((s) => ({ ...s, id: uid() })) };
     if (src.cut) L.cut = cloneMask(src.cut);
+    if (src.vec) L.vec = cloneVec(src.vec, true);
     doc.layers.splice(doc.activeLayer + 1, 0, L);
     doc.activeLayer++;
     markChanged();
@@ -510,9 +635,20 @@ export function initPanels() {
   });
   on('selection', refreshStrokeProps);
   on('doc', () => { refreshStrokeProps(); refreshLayerCounts(); });
-  on('layers', () => { refreshLayers(); if (S.tool === 'cutout') refreshToolOptions(); });
+  on('layers', () => { refreshLayers(); if (S.tool === 'cutout' || S.tool === 'colors') refreshToolOptions(); });
   on('cutstate', () => { if (S.tool === 'cutout') refreshToolOptions(); });
-  on('frame', () => { refreshLayers(); refreshStatus(); refreshStrokeProps(); if (S.tool === 'cutout') refreshToolOptions(); });
+  let vecDeferred = false;
+  on('vecstate', () => {
+    if (S.tool !== 'colors') return;
+    // arrastando um controle deslizante do painel: atualiza ao soltar (não interrompe o arraste)
+    const ae = document.activeElement as HTMLInputElement | null;
+    if (ae && ae.tagName === 'INPUT' && ae.type === 'range' && ae.closest('#toolOptions')) {
+      if (!vecDeferred) { vecDeferred = true; ae.addEventListener('change', () => { vecDeferred = false; refreshToolOptions(); }, { once: true }); }
+      return;
+    }
+    refreshToolOptions();
+  });
+  on('frame', () => { refreshLayers(); refreshStatus(); refreshStrokeProps(); if (S.tool === 'cutout' || S.tool === 'colors') refreshToolOptions(); });
   on('view', refreshStatus);
   on('pointer', refreshPointerStatus);
   on('loaded', () => { refreshLayers(); refreshStatus(); refreshStrokeProps(); });
@@ -529,5 +665,5 @@ function refreshLayerCounts() {
   const items = $('layerList').querySelectorAll('li .cnt');
   const n = doc.layers.length;
   if (items.length !== n) { refreshLayers(); return; }
-  items.forEach((el, k) => { const L = doc.layers[n - 1 - k]; el.textContent = L.cut ? '✂' : String(L.strokes.length); });
+  items.forEach((el, k) => { const L = doc.layers[n - 1 - k]; el.textContent = L.cut ? '✂' : L.vec ? '◆' + L.vec.shapes.length : String(L.strokes.length); });
 }

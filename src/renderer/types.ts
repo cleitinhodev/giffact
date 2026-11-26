@@ -38,6 +38,14 @@ export interface CutMask {
   holes?: CutPt[][];
 }
 
+/** Forma vetorial preenchida (Seletor de cores, 1.3.0-beta+): anel 0 = contorno externo, demais = furos (evenodd). */
+export interface VecShape {
+  id: string;
+  color: string;
+  rings: CutPt[][];
+}
+export interface VecData { shapes: VecShape[] }
+
 export interface Layer {
   id: string;
   name: string;
@@ -47,6 +55,8 @@ export interface Layer {
   strokes: Stroke[];
   /** presente = camada de recorte (pixels do quadro dentro da máscara; não recebe traços) */
   cut?: CutMask;
+  /** presente = camada de formas vetoriais (Seletor de cores; não recebe traços) */
+  vec?: VecData;
 }
 
 export interface FrameDoc {
@@ -70,6 +80,7 @@ export type ToolId =
   | 'color'
   | 'eraser'
   | 'cutout'
+  | 'colors'
   | 'hand';
 
 export type EraserMode = 'stroke' | 'intersect' | 'area';
@@ -102,6 +113,16 @@ export interface Settings {
   cutPoly: boolean;
   cutFeather: number;
   cutScope: CutScope;
+  /** Seletor de cores */
+  vecColors: number;
+  vecTol: number;
+  vecSpeck: number;
+  vecSmooth: number;
+  vecScope: CutScope;
+  vecLinesScope: 'current' | 'layer';
+  vecLinesRemove: boolean;
+  /** espessura máxima (px do documento) de uma forma para ser tratada como traço */
+  vecLineMax: number;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -129,5 +150,13 @@ export const DEFAULT_SETTINGS: Settings = {
   cutPoly: false,
   cutFeather: 0,
   cutScope: 'current',
+  vecColors: 8,
+  vecTol: 6,
+  vecSpeck: 8,
+  vecSmooth: 2,
+  vecScope: 'current',
+  vecLinesScope: 'current',
+  vecLinesRemove: true,
+  vecLineMax: 8,
   swatches: ['#111111', '#444444', '#ffffff', '#e53935', '#1e88e5', '#43a047', '#fdd835', '#8e24aa'],
 };

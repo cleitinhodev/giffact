@@ -4,6 +4,7 @@ import type { FrameDoc } from './types';
 import { decodeGif, decodeImage, isGif, type DecodedGif } from './gif';
 import { t } from './i18n';
 import { cloneMask, isValidMask } from './cutmask';
+import { sanitizeVec } from './vector';
 
 /** Identificadores aceitos no campo `app` (o antigo vem da época “GIF Linework”). */
 export const PROJECT_APP_IDS = ['giffact', 'gif-linework'];
@@ -74,6 +75,11 @@ export async function loadProjectBytes(bytes: Uint8Array): Promise<void> {
       if (L.cut !== undefined) {
         if (isValidMask(L.cut)) { L.cut = cloneMask({ pts: L.cut.pts, feather: Number.isFinite(+L.cut.feather) ? Math.max(0, +L.cut.feather) : 0, holes: L.cut.holes }); L.strokes = []; }
         else delete L.cut;
+      }
+      // camada de formas vetoriais (1.3+): dados válidos ou vira camada comum
+      if (L.vec !== undefined) {
+        const v = sanitizeVec(L.vec);
+        if (v) { L.vec = v; L.strokes = []; delete L.cut; } else delete L.vec;
       }
     }
   }

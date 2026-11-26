@@ -4,6 +4,7 @@ import type { FrameDoc, Layer } from './types';
 import { renderFrameToCanvas } from './render';
 import { cutCanvas } from './cutmask';
 import { getSamples, outlineSvgPath } from './geom';
+import { SEAM, shapeSvgD } from './vector';
 import { createExportSink } from './platform';
 import { t } from './i18n';
 
@@ -16,8 +17,17 @@ export interface ExportOptions {
   includeGif: boolean;
   layerNames: Set<string> | null; // null = todas visíveis
   prefix: string;
-  /** conteúdo: linhas + recortes (padrão), só linhas ou só recortes */
-  content?: 'both' | 'lines' | 'cuts';
+  /** conteúdo: tudo (padrão), só linhas, só recortes ou só formas vetoriais */
+  content?: ExportContent;
+}
+
+export type ExportContent = 'both' | 'lines' | 'cuts' | 'vectors';
+/** a camada entra no conteúdo escolhido? */
+export function contentMatches(l: Layer, content: ExportContent): boolean {
+  if (content === 'both') return true;
+  if (content === 'cuts') return !!l.cut;
+  if (content === 'vectors') return !!l.vec;
+  return !l.cut && !l.vec;
 }
 
 export function padFor(count: number) {
@@ -59,6 +69,14 @@ export function frameToSvg(doc: FrameDoc, fi: number, o: { width: number; height
       out.push(`<image id="${esc(L.name)}" opacity="${L.opacity}" width="${W}" height="${H}" preserveAspectRatio="none" xlink:href="${url}" href="${url}"/>`);
       continue;
     }
+    if (L.vec) {
+      // formas vetoriais: caminhos Bézier reais (anéis com furos = evenodd)
+      if (!L.vec.shapes.length || L.opacity <= 0.001) continue;
+      out.push(`<g id="${esc(L.name)}" opacity="${L.opacity}" stroke-width="${SEAM}" stroke-linejoin="round">`);
+      for (const s of L.vec.shapes) out.push(`<path fill="${esc(s.color)}" stroke="${esc(s.color)}" fill-rule="evenodd" d="${shapeSvgD(s)}"/>`);
+      out.push('</g>');
+      continue;
+    }
     if (!L.strokes.length) continue;
     out.push(`<g id="${esc(L.name)}" opacity="${L.opacity}">`);
     for (const s of L.strokes) {
@@ -76,7 +94,7 @@ export async function runExport(o: ExportOptions, progress: (done: number, total
   const sink = await createExportSink(`${(o.prefix || 'quadros').replace(/[_\-\s.]+$/, '') || 'quadros'}_${ext}.zip`);
   if (!sink) return null;
   const content = o.content || 'both';
-  const filter = (l: Layer) => (!o.layerNames || o.layerNames.has(l.name)) && (content === 'both' || (content === 'cuts') === !!l.cut);
+  const filter = (l: Layer) => (!o.layerNames || o.layerNames.has(l.name)) && contentMatches(l, content);
   const total = S.frames.length;
   for (let k = 0; k < o.frames.length; k++) {
     if (isCancelled()) throw new Error(t('export.cancelled'));

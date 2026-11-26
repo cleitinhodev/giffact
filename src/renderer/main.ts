@@ -2,6 +2,7 @@
 import { S, emit, on, goFrame, setTool, undo, redo, copySelection, pasteToFrames, toast, activeLayer, saveSettings, closeDocument } from './state';
 import { cutCanvas, renderCut } from './cutmask';
 import { renderFrameToCanvas } from './render';
+import * as VEC from './vector';
 import { initView, fitView, setZoom, setRotation, requestRender, updateCursor } from './view';
 import { TOOLS, currentTool, onToolChanged, deleteSelection, selectAll } from './tools';
 import { initPanels, copyNeighbor, settingsChanged, TOOL_DEFS } from './ui';
@@ -208,7 +209,7 @@ function onKey(e: KeyboardEvent) {
     if (k === 'c') { e.preventDefault(); const n = copySelection(); if (n) toast(t('toast.copied', { n })); return; }
     if (k === 'x') { e.preventDefault(); const n = copySelection(); if (n) { deleteSelection(); toast(t('toast.cut', { n })); } return; }
     if (k === 'v' && e.shiftKey) { e.preventDefault(); openRangeDialog(S.selection.size ? 'selection' : 'layer'); return; }
-    if (k === 'v') { e.preventDefault(); if (!S.clipboard) { toast(t('toast.clipEmpty'), 'warn'); return; } if (activeLayer()?.locked) { toast(t('toast.layerLocked'), 'warn'); return; } if (activeLayer()?.cut) { toast(t('toast.cutLayer'), 'warn'); return; } pasteToFrames([S.cur]); return; }
+    if (k === 'v') { e.preventDefault(); if (!S.clipboard) { toast(t('toast.clipEmpty'), 'warn'); return; } if (activeLayer()?.locked) { toast(t('toast.layerLocked'), 'warn'); return; } if (activeLayer()?.cut) { toast(t('toast.cutLayer'), 'warn'); return; } if (activeLayer()?.vec) { toast(t('toast.vecLayer'), 'warn'); return; } pasteToFrames([S.cur]); return; }
     if (k === 'a') { e.preventDefault(); selectAll(); if (S.tool !== 'select') setTool('select'); return; }
     if (k === 'd') { e.preventDefault(); S.selection.clear(); emit('selection'); return; }
     if (k === 'n' && e.shiftKey) { e.preventDefault(); $('lyAdd').click(); return; }
@@ -304,4 +305,5 @@ init();
   prefs: { setTheme, setAnimations, effectiveTheme, animationsOn, get: () => ({ ...prefs }) },
   version: APP_VERSION,
   cut: { cutCanvas, renderCut, renderFrameToCanvas },
+  vec: VEC,
 };

@@ -375,3 +375,15 @@ button.primary.danger:hover:not(:disabled) { background: #e8285a; filter: none; 
 .cut-sub-dot { width: 10px; height: 10px; border-radius: 50%; background: #ff2d55; box-shadow: 0 0 0 2px rgba(255, 45, 85, 0.25); }
 .field.cut-sub-scope { flex-direction: column; align-items: stretch; gap: 4px; }
 .field.cut-sub-scope select { width: 100%; }
+
+/* Seletor de cores (vetorizar) */
+.vec-palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(26px, 1fr)); gap: 4px; }
+.vec-palette .vsw { position: relative; height: 26px; border-radius: 6px; background: var(--c); cursor: pointer; border: 1px solid rgba(127, 127, 140, 0.55); box-sizing: border-box; }
+.vec-palette .vsw.sel { outline: 2px solid #ff2fb4; outline-offset: 1px; }
+.vec-palette .vsw.del { background: repeating-conic-gradient(#c9c9d3 0 25%, #eeeef3 0 50%) 0 0 / 8px 8px; }
+.vec-palette .vsw.del::after { content: ""; position: absolute; inset: 3px; border-radius: 4px; background: var(--c); opacity: .35; }
+.vec-palette .vsw-x { position: absolute; right: -4px; top: -4px; width: 15px; height: 15px; min-width: 0; padding: 0; border-radius: 50%; font-size: 10px; line-height: 13px; z-index: 1; opacity: 0; }
+.vec-palette .vsw:hover .vsw-x, .vec-palette .vsw.del .vsw-x { opacity: 1; }
+button.danger:not(.primary) { border-color: #ff2d55; color: #ff5a78; }
+.vec-title { color: var(--accent, #9f8cff); margin-top: 4px; }
+#layerList li .cnt.vec { color: #c58bff; }

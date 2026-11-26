@@ -1,7 +1,7 @@
 // Diálogos: renomear, exportar, copiar para quadros, prévia animada, auto-traçar, atalhos
 import { S, allLayerNames, copyLayerToFrames, copySelection, pasteToFrames, toast, pushUndo, markChanged, newLayer, emit } from './state';
 import { $, h, showModal } from './dom';
-import { fileName, runExport } from './exporter';
+import { fileName, runExport, type ExportContent } from './exporter';
 import { drawFrameLayers } from './render';
 import { traceCanvas } from './trace';
 import { isElectron } from './platform';
@@ -51,8 +51,8 @@ export function openExportDialog(format: 'png' | 'svg' = 'png') {
   const content = $<HTMLSelectElement>('exContent');
   // prefixo padrão acompanha o conteúdo (linhas_ / recorte_) enquanto o usuário não digitar outro
   const syncPrefix = () => {
-    if (!pfx.value || isAnyTranslation('export.prefixDefault', pfx.value) || isAnyTranslation('export.prefixCuts', pfx.value)) {
-      pfx.value = t(content.value === 'cuts' ? 'export.prefixCuts' : 'export.prefixDefault');
+    if (!pfx.value || isAnyTranslation('export.prefixDefault', pfx.value) || isAnyTranslation('export.prefixCuts', pfx.value) || isAnyTranslation('export.prefixVectors', pfx.value)) {
+      pfx.value = t(content.value === 'cuts' ? 'export.prefixCuts' : content.value === 'vectors' ? 'export.prefixVectors' : 'export.prefixDefault');
     }
   };
   syncPrefix();
@@ -101,7 +101,7 @@ export function openExportDialog(format: 'png' | 'svg' = 'png') {
     const n = S.frames.length;
     if (frames.value === 'all') list = Array.from({ length: n }, (_, i) => i);
     else if (frames.value === 'current') list = [S.cur];
-    else if (frames.value === 'drawn') list = Array.from({ length: n }, (_, i) => i).filter((i) => S.docs[i].layers.some((l) => l.visible && (l.strokes.length || l.cut)));
+    else if (frames.value === 'drawn') list = Array.from({ length: n }, (_, i) => i).filter((i) => S.docs[i].layers.some((l) => l.visible && (l.strokes.length || l.cut || l.vec?.shapes.length)));
     else {
       const a = Math.max(1, Math.min(n, +from.value || 1)), b = Math.max(1, Math.min(n, +to.value || n));
       for (let i = Math.min(a, b); i <= Math.max(a, b); i++) list.push(i - 1);
@@ -126,7 +126,7 @@ export function openExportDialog(format: 'png' | 'svg' = 'png') {
         includeGif: $<HTMLInputElement>('exIncludeGif').checked,
         layerNames: names.size === allLayerNames().length ? null : names,
         prefix: $<HTMLInputElement>('exPrefix').value,
-        content: $<HTMLSelectElement>('exContent').value as 'both' | 'lines' | 'cuts',
+        content: $<HTMLSelectElement>('exContent').value as ExportContent,
       }, setP, () => exportCancel);
       if (where) {
         toast(t('export.done', { n: list.length, where }), 'ok');
@@ -293,7 +293,7 @@ export const SHORTCUTS: [Key, ScItem[]][] = [
   ['sc.tools', [
     ['sc.select', 'V'], ['sc.pen', 'B'], ['sc.curve', 'C'], ['sc.line', 'L'],
     ['sc.edit', 'N'], ['sc.weight', 'W'], ['sc.pressure', 'U'], ['sc.color', 'K'],
-    ['sc.eraser', 'E'], ['sc.cutoutTool', 'X'], ['sc.hand', 'H'], ['sc.widthPM', '[  ]'], ['sc.stabPM', 'Shift+[  ]'],
+    ['sc.eraser', 'E'], ['sc.cutoutTool', 'X'], ['sc.colorsTool', 'I'], ['sc.hand', 'H'], ['sc.widthPM', '[  ]'], ['sc.stabPM', 'Shift+[  ]'],
   ]],
   ['sc.curveLine', [
     ['sc.finish', 'sc.finish.k'], ['sc.finishClosed', 'sc.finishClosed.k'],
@@ -303,6 +303,11 @@ export const SHORTCUTS: [Key, ScItem[]][] = [
     ['sc.cutClose', 'sc.cutClose.k'], ['sc.undoPoint', 'sc.undoPoint.k'], ['sc.cutCorner', 'sc.cutCorner.k'],
     ['sc.cutEdit', 'sc.cutEdit.k'], ['sc.cutApply', 'Enter'], ['sc.cutCancel', 'Esc'],
     ['sc.cutSubtract', 'S'], ['sc.cutRemove', 'Enter'], ['sc.cutDelArea', 'Delete'],
+  ]],
+  ['sc.colors', [
+    ['sc.vecPick', 'sc.vecPick.k'], ['sc.vecDelete', 'Delete'], ['sc.vecKeep', 'Shift+Delete'],
+    ['sc.vecUndo', 'Ctrl+Z'], ['sc.vecGenerate', 'Enter'], ['sc.vecCancel', 'Esc'],
+    ['sc.vecShape', 'sc.vecShape.k'], ['sc.vecNode', 'sc.vecNode.k'], ['sc.vecDelShape', 'Delete'],
   ]],
   ['sc.editPoints', [
     ['sc.movePoint', 'sc.movePoint.k'], ['sc.insertPoint', 'sc.insertPoint.k'],

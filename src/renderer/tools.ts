@@ -1,4 +1,4 @@
-// Ferramentas de desenho e edição vetorial (estilo camada de Linework do PaintTool SAI)
+// Ferramentas de desenho e edição vetorial (camada de linhas)
 import { S, activeLayer, emit, markChanged, pushUndo, replaceStrokes, toast, hooks } from './state';
 import type { Layer, Pt, Stroke, ToolId } from './types';
 import {
@@ -8,6 +8,7 @@ import {
 import { docToScreen, px, requestRender, type PointerInfo, type Tool } from './view';
 import { t } from './i18n';
 import { CutoutTool } from './cutout';
+import { ColorSelectTool } from './colorsel';
 
 // ---------------- utilidades ----------------
 function editableLayer(silent = false): Layer | null {
@@ -16,6 +17,7 @@ function editableLayer(silent = false): Layer | null {
   if (L.locked) { if (!silent) toast(t('toast.activeLocked'), 'warn'); return null; }
   if (!L.visible) { if (!silent) toast(t('toast.activeHidden'), 'warn'); return null; }
   if (L.cut) { if (!silent) toast(t('toast.cutLayer'), 'warn'); return null; }
+  if (L.vec) { if (!silent) toast(t('toast.vecLayer'), 'warn'); return null; }
   return L;
 }
 
@@ -1037,6 +1039,7 @@ export const TOOLS: Record<ToolId, Tool> = {
   color: new ColorTool(),
   eraser: new EraserTool(),
   cutout: new CutoutTool(),
+  colors: new ColorSelectTool(),
   hand: new HandTool(),
 };
 
