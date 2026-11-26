@@ -5,7 +5,7 @@
 <h1 align="center">Giffact</h1>
 
 <p align="center">
-  Trace animated GIFs frame by frame with clean, pressure-sensitive vector linework, in the spirit of PaintTool SAI's linework layers, then export only the lines as PNG or SVG at any resolution.
+  Trace animated GIFs frame by frame with clean, pressure-sensitive vector linework, then export only the lines as PNG or SVG at any resolution.
   <br />
   <b>English</b> · <a href="README.md">Português (Brasil)</a>
 </p>
@@ -20,7 +20,7 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
 - **Open GIF** (button, `Ctrl+O` or drag and drop). PNG, JPG and WebP open as a single frame. Disposal methods, partial frames, transparency and per-frame delays are decoded correctly.
 - **Timeline** with every frame. It scrolls horizontally, uses virtualized thumbnails and stays smooth with hundreds of frames.
 - **Per-frame layers:** add, delete, rename, reorder, hide, lock and set opacity. "+ all" creates a layer in every frame.
-- **Vector linework tools** (SAI-like):
+- **Vector linework tools:**
 
   | Key | Tool | What it does |
   |---|---|---|
@@ -31,7 +31,7 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
   | `W` | **Weight** | Drag over a stroke to make the whole stroke thicker or thinner. |
   | `U` | **Pressure** | Change the thickness only at one point. |
   | `K` | **Color** | Click a stroke to apply the current color. |
-  | `E` | **Vector eraser** | Whole stroke, **up to the intersection** (like SAI) or area. |
+  | `E` | **Vector eraser** | Whole stroke, **up to the intersection** or area. |
   | `V` | **Selection** | Move, scale and rotate with handles. `Delete` removes the selection. |
   | `H` | **Hand** | Pan the view (or hold `Space`, or use the middle mouse button). |
 
@@ -46,10 +46,20 @@ Giffact runs as a desktop app for Windows and Linux (Electron) and as a plain we
   - Choose which layers and frames to include.
 - **Projects** (`Ctrl+S`): `.giffact` files with the GIF embedded. Older `.gifline`/`.json` projects from GIF Linework still open.
 
+## In testing: 1.3.0-beta.1 (Color selector)
+Test build from the `seletor-cores` branch, available as the [v1.3.0-beta.1 pre-release](https://github.com/cleitinhodev/giffact/releases/tag/v1.3.0-beta.1). It also includes everything from 1.2.0-beta.2 (Cutout and Subtract).
+- New **Color selector** tool (`I`): the GIF frame is reduced to a **palette of flat colors**. Choose the **number of colors** with a live preview, plus **speck removal** and **edge smoothing**.
+- **Click a color in the image** to select it. **Tolerance** also picks similar colors, and `Shift+click` adds more. **Delete color** (`Delete`) removes hair, clothes or a wall; **Keep only this** (`Shift+Delete`) does the opposite. Each palette swatch has a × to delete or restore it, and `Ctrl+Z` undoes.
+- **Generate vectors** (`Enter`): every remaining color region becomes a **filled vector shape** (Bézier curves, with holes) on a new **vector layer** (◆). It works on the current frame, all frames or a range, always with the same deleted colors.
+- **Edit the shapes:** click to select (`Shift` = several) and drag to move. With one shape selected, drag its points, click the outline to add a point, right-click to delete a point and `Alt+click` for a sharp corner. You can also change the fill color, select the same color and delete shapes.
+- **Line → Giffact lines:** shapes in the line color (the darkest one, or that of the selected shapes) become **regular lines with thickness and pressure** on a line layer. They can be edited with Edit points, Thickness, Eraser and so on, just like hand-drawn ones. Shapes thicker than the **max line thickness** stay as shapes.
+- The vector layer is saved in the project (older versions open the file and show that layer as empty, without crashing) and is included in **PNG** (any scale, transparent background) and **SVG** (real paths) export. Export has a **Vector shapes only** option.
+- Limitations of this beta: shapes in one frame are not linked to the next frame, so each frame is edited separately. For very noisy GIFs, use fewer colors and more smoothing.
+
 ## In testing: 1.2.0-beta.2 (Cutout + Subtract)
 - New **Cutout** tool (`X`): click to outline an area. Points can be smooth or polygon corners (`Alt` toggles a point). Right-click goes back one point. Close it by clicking the 1st point, double-clicking or pressing `Enter`. You can then adjust the points and apply.
 - The GIF pixels inside the mask go to a **cutout layer** (✂) that is transparent outside the area, with optional edge feathering. It works on the current frame, all frames or a range.
-- The layer can be shown or hidden, is saved in the project and is included in PNG/SVG export. When exporting, choose **Lines and cutouts**, **Lines only** or **Cutouts only**, which lets you extract transparent PNGs from a GIF.
+- The layer can be shown or hidden, is saved in the project and is included in PNG/SVG export. When exporting, choose **Everything**, **Lines only** or **Cutouts only**, which lets you extract transparent PNGs from a GIF.
 - **New in beta.2, Subtract** (`S`): with a cutout layer selected, click **Subtract** and draw small **red areas** just like with Curve over what you don't want, such as the gap between an arm and the body. You can leave several pending and adjust their points (`Delete` erases the selected one). Click **Remove** and they become transparent holes in the cutout. Repeat as often as you like; `Ctrl+Z` undoes each Remove. Removed areas are saved in the project and still apply after "Edit mask".
 
 ## What's new in 1.1.1
@@ -125,6 +135,9 @@ npm run typecheck
 npm run test:i18n                 # 10 languages: key/placeholder parity, locale detection, pseudo-locale scan, de/ru/ja/zh/ko layouts
 npm test                          # drawing, editing, eraser, layers, auto-trace, export (PNG/SVG), projects, pen pressure
 npm run test:features             # Project menu, themes, neon animations, language switching, Help/About links
+npm run test:cutout               # Cutout (mask, frames, project, export)
+npm run test:cutout-subtract      # Subtract from a cutout
+npm run test:colorsel             # Color selector: palette, delete/keep, shapes, nodes, line → lines, all frames, project, PNG/SVG
 npm run test:layout               # 300/600 frames at 1280×720, 1920×1080 and 1024×600
 xvfb-run -a npm run test:electron
 xvfb-run -a npm run test:features:electron

@@ -35,7 +35,7 @@ await win.evaluate(() => localStorage.clear());
 await win.reload();
 await waitFor(win, () => !!window.__app);
 const info = await app.evaluate(({ app, BrowserWindow }) => ({ name: app.getName(), version: app.getVersion(), packaged: app.isPackaged, title: BrowserWindow.getAllWindows()[0].getTitle(), n: BrowserWindow.getAllWindows().length }));
-ok(info.packaged && info.name === 'Giffact' && info.version === '1.1.1', `App empacotado: ${info.name} ${info.version} (isPackaged=${info.packaged})`);
+ok(info.packaged && info.name === 'Giffact' && info.version === JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version, `App empacotado: ${info.name} ${info.version} (isPackaged=${info.packaged})`);
 ok(info.title === 'Giffact' && info.n === 1, `Título da janela: "${info.title}"`);
 ok(await win.evaluate(() => window.__app.i18n.getLang()) === 'en', 'Idioma do sistema (en-US) → inglês');
 ok(await win.evaluate(() => { const i = document.querySelector('#topbar .brand .logo'); return i.complete && i.naturalWidth > 0; }), 'Logo carregado');

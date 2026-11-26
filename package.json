@@ -1,8 +1,8 @@
 {
   "name": "giffact",
   "productName": "Giffact",
-  "version": "1.2.0-beta.2",
-  "description": "Giffact — trace animated GIFs frame by frame with clean vector linework (PaintTool SAI style) and export PNG/SVG at any size.",
+  "version": "1.3.0-beta.1",
+  "description": "Giffact — trace animated GIFs frame by frame with clean vector linework and export PNG/SVG at any size.",
   "main": "app/main.js",
   "desktopName": "giffact.desktop",
   "author": {
@@ -24,9 +24,10 @@
     "test:features": "node test/features.mjs",
     "test:cutout": "node test/cutout.mjs",
     "test:cutout-subtract": "node test/cutout-subtract.mjs",
+    "test:colorsel": "node test/colorsel.mjs",
     "test:features:electron": "node test/features.mjs electron",
     "test:i18n": "node test/i18n.mjs",
-    "test:all": "npm run typecheck && npm run build && npm run test:i18n && npm test && npm run test:features && npm run test:cutout && npm run test:cutout-subtract && npm run test:layout && npm run test:electron && npm run test:features:electron && npm run test:layout:electron",
+    "test:all": "npm run typecheck && npm run build && npm run test:i18n && npm test && npm run test:features && npm run test:cutout && npm run test:cutout-subtract && npm run test:colorsel && npm run test:layout && npm run test:electron && npm run test:features:electron && npm run test:layout:electron",
     "dist:linux": "node build.mjs --minify && electron-builder --linux AppImage tar.gz deb --x64",
     "test:linux": "node test/linux-smoke.mjs"
   },
@@ -123,7 +124,7 @@
       "executableName": "giffact",
       "artifactName": "Giffact-${version}-linux-${arch}.${ext}",
       "synopsis": "Trace animated GIFs with clean vector linework",
-      "description": "Giffact: trace animated GIFs frame by frame with clean, pressure-sensitive vector linework (PaintTool SAI style) and export PNG/SVG at any resolution.",
+      "description": "Giffact: trace animated GIFs frame by frame with clean, pressure-sensitive vector linework and export PNG/SVG at any resolution.",
       "maintainer": "cleitinhodev <139408626+cleitinhodev@users.noreply.github.com>",
       "vendor": "cleitinhodev",
       "syncDesktopName": true,

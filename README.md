@@ -5,7 +5,7 @@
 <h1 align="center">Giffact</h1>
 
 <p align="center">
-  Contorne GIFs animados quadro a quadro com linhas vetoriais limpas e sensíveis à pressão, no espírito das camadas de linework do PaintTool SAI, e exporte só as linhas em PNG ou SVG na resolução que quiser.
+  Contorne GIFs animados quadro a quadro com linhas vetoriais limpas e sensíveis à pressão e exporte só as linhas em PNG ou SVG na resolução que quiser.
   <br />
   <a href="README.en.md">English</a> · <b>Português (Brasil)</b>
 </p>
@@ -20,7 +20,7 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
 - **Abrir GIF** (botão, `Ctrl+O` ou arrastar para a janela). PNG, JPG e WebP abrem como um quadro. Descarte (disposal), quadros parciais, transparência e o tempo de cada quadro são lidos corretamente.
 - **Linha do tempo** com todos os quadros. Ela rola na horizontal, tem miniaturas virtualizadas e continua leve com centenas de quadros.
 - **Camadas por quadro:** adicionar, excluir, renomear, reordenar, ocultar, bloquear e ajustar a opacidade. "+ todos" cria a camada em todos os quadros.
-- **Ferramentas vetoriais** (como no SAI):
+- **Ferramentas vetoriais:**
 
   | Tecla | Ferramenta | Uso |
   |---|---|---|
@@ -31,7 +31,7 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
   | `W` | **Espessura** | Arraste sobre um traço para engrossar ou afinar o traço todo. |
   | `U` | **Pressão** | Muda a espessura só num ponto. |
   | `K` | **Cor** | Clique num traço para aplicar a cor atual. |
-  | `E` | **Borracha vetorial** | Traço inteiro, **até a interseção** (como no SAI) ou área. |
+  | `E` | **Borracha vetorial** | Traço inteiro, **até a interseção** ou área. |
   | `V` | **Seleção** | Mover, escalar e girar com alças. `Delete` apaga. |
   | `H` | **Mão** | Move a vista (ou segure `Espaço`, ou use o botão do meio). |
 
@@ -46,10 +46,20 @@ O Giffact funciona como app de desktop para Windows e Linux (Electron) e como p�
   - Você escolhe quais camadas e quadros entram.
 - **Projetos** (`Ctrl+S`): arquivos `.giffact` com o GIF embutido. Projetos antigos `.gifline`/`.json` do GIF Linework continuam abrindo.
 
+## Em teste: 1.3.0-beta.1 (Seletor de cores)
+Versão de teste na branch `seletor-cores`, baixe no [pré-lançamento v1.3.0-beta.1](https://github.com/cleitinhodev/giffact/releases/tag/v1.3.0-beta.1). Ela inclui tudo da 1.2.0-beta.2 (Recorte e Subtrair).
+- Nova ferramenta **Seletor de cores** (`I`): o quadro do GIF é reduzido a uma **paleta de cores chapadas**. Você escolhe o **número de cores** e vê a prévia ao vivo, com **remoção de manchinhas** e **suavização de bordas**.
+- **Clique numa cor da imagem** para selecioná-la. A **tolerância** pega também as cores parecidas, e `Shift+clique` junta várias. **Excluir cor** (`Delete`) tira cabelo, roupa ou parede; **Manter só esta** (`Shift+Delete`) faz o contrário. Cada amostra da paleta tem um × para excluir ou restaurar, e `Ctrl+Z` desfaz.
+- **Gerar vetores** (`Enter`): cada região de cor que sobrou vira uma **forma vetorial preenchida** (curvas Bézier, com furos) numa nova **camada vetorial** (◆). Funciona no quadro atual, em todos os quadros ou num intervalo, sempre com as mesmas cores excluídas.
+- **Editar as formas:** clique para selecionar (`Shift` = várias) e arraste para mover. Com uma forma selecionada, arraste os pontos, clique no contorno para criar um ponto, use o botão direito para apagar um ponto e `Alt+clique` para canto reto. Também dá para trocar a cor de preenchimento, selecionar a mesma cor e apagar formas.
+- **Traço → linhas do Giffact:** as formas da cor do traço (a mais escura, ou a das formas selecionadas) viram **linhas normais com espessura e pressão** numa camada de linhas. Elas são editáveis com Editar pontos, Espessura, Borracha etc., como as feitas à mão. Formas mais grossas que a **espessura máxima** continuam como formas.
+- A camada vetorial é salva no projeto (versões antigas abrem o arquivo e mostram essa camada vazia, sem travar) e sai no **PNG** (qualquer escala, fundo transparente) e no **SVG** (caminhos reais). Na exportação há a opção **Só formas vetoriais**.
+- Limitações desta beta: as formas de um quadro não estão ligadas às do quadro seguinte, então cada quadro é editado separado. Em GIFs muito ruidosos, use menos cores e mais suavização.
+
 ## Em teste: 1.2.0-beta.2 (Recorte + Subtrair)
 - Nova ferramenta **Recorte** (`X`): clique para contornar uma área. Os pontos podem ser suaves ou de polígono (`Alt` alterna um ponto). O botão direito volta um ponto. Para fechar, clique no 1º ponto, dê duplo clique ou aperte `Enter`. Depois você pode ajustar os pontos e aplicar.
 - Os pixels do GIF dentro da máscara vão para uma **camada de recorte** (✂), transparente fora da área, com suavização de borda opcional. Funciona no quadro atual, em todos os quadros ou num intervalo.
-- A camada pode ser mostrada ou ocultada, é salva no projeto e sai no PNG/SVG. Na exportação você escolhe **Linhas e recortes**, **Só linhas** ou **Só recortes**, o que permite extrair PNGs transparentes de um GIF.
+- A camada pode ser mostrada ou ocultada, é salva no projeto e sai no PNG/SVG. Na exportação você escolhe **Tudo**, **Só linhas** ou **Só recortes**, o que permite extrair PNGs transparentes de um GIF.
 - **Novo na beta.2, Subtrair** (`S`): com uma camada de recorte selecionada, clique em **Subtrair** e desenhe pequenas **áreas vermelhas** do mesmo jeito que na Curva sobre o que não quer, como o vão entre o braço e o corpo. Dá para deixar várias pendentes e ajustar os pontos (`Delete` apaga a selecionada). Clique em **Remover** e elas viram buracos transparentes no recorte. Repita quantas vezes quiser; cada Remover é desfeito com `Ctrl+Z`. As áreas removidas ficam salvas no projeto e continuam valendo ao usar "Editar máscara".
 
 ## Novidades da 1.1.1
@@ -125,6 +135,9 @@ npm run typecheck
 npm run test:i18n                 # 10 idiomas: paridade de chaves/placeholders, detecção, pseudo-localização, layout de/ru/ja/zh/ko
 npm test                          # desenho, edição, borracha, camadas, auto-traçar, exportação PNG/SVG, projetos, pressão
 npm run test:features             # menu Projeto, temas, animações neon, troca de idioma, links de Ajuda/Sobre
+npm run test:cutout               # Recorte (máscara, quadros, projeto, exportação)
+npm run test:cutout-subtract      # Subtrair do recorte
+npm run test:colorsel             # Seletor de cores: paleta, excluir/manter, formas, nós, traço → linhas, todos os quadros, projeto, PNG/SVG
 npm run test:layout               # 300/600 quadros em 1280×720, 1920×1080 e 1024×600
 xvfb-run -a npm run test:electron
 xvfb-run -a npm run test:features:electron
